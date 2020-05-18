@@ -10,6 +10,7 @@ class vec2 {
 public:
 	vec2() : e{0,0} {}
 	vec2(float e0, float e1) : e{e0, e1} {}
+	explicit vec2(const vec2* v) : e{v->x(), v->z()} {}
 
 	float x() const { return e[0]; }
 	float z() const { return e[1]; }
@@ -43,7 +44,7 @@ public:
 	}
 
 public:
-	float e[2];
+	float e[2]{};
 };
 
 // Aliases
@@ -52,7 +53,7 @@ using Vec = vec2;
 
 // vec2 Utility Functions
 inline std::ostream& operator<<(std::ostream &out, const vec2 &v) {
-	return out << v.e[0] << ' ' << v.e[1];
+	return out << v.e[0] << ", " << v.e[1];
 }
 
 bool operator==(const vec2& u, const vec2& v) {
