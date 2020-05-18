@@ -2,7 +2,7 @@
 #define CUCBET_BEAM_CUH
 
 #include <vector>
-#include <cassert>
+#include <fstream>
 
 #include "Ray.cuh"
 
@@ -12,32 +12,9 @@ public:
 	Beam(int beam_id, float beam_width, int num_rays, Vec dir) :
 		beam_num(beam_id),
 		nrays(num_rays),
-		width(beam_width)
-	{
-		direction = unit_vector(dir);
-	}
-
-	void init_beam(float range, float ray_len, int nt) {
-		float start = (range - width) / 2.0f;
-		float step = 0.5;
-
-		for (int r = 0; r < nrays; ++r) {
-			Point ray_orig;
-
-			// x axis = 0, z axis = 1
-			if (beam_num == 0) {
-				ray_orig = Point(0.0, start);
-			} else {
-				ray_orig = Point(start, 0.0);
-			}
-
-			Ray ray1(ray_orig, direction);
-			draw_init_path(ray1, ray_len, nt);
-			rays.emplace_back(ray1);
-
-			start += step;
-		}
-	}
+		width(beam_width),
+		direction(unit_vector(dir))
+	{}
 
 public:
 	int beam_num;
@@ -47,12 +24,31 @@ public:
 	std::vector<Ray> rays;
 };
 
+void init_beam(Beam& b, float range, int nx, int nt) {
+	float start = (range - b.width) / 2.0f;
+	float step = range / float(nx - 1);
+
+	for (int r = 0; r < b.nrays; ++r) {
+		Point ray_orig;
+
+		if (b.beam_num == 0) {
+			ray_orig = Point(0.0, start);
+		} else {
+			ray_orig = Point(start, 0.0);
+		}
+
+		Ray ray1(ray_orig, b.direction);
+		draw_init_path(ray1, range, nt);
+		b.rays.emplace_back(ray1);
+
+		start += step;
+	}
+}
+
 void find_intersections(Beam& b1, Beam& b2) {
-	// Iterates over all rays in beam 1 and stores each intersection
-	// in that ray class, so each ray has record of its own intersections.
 	for (Ray& r1: b1.rays) {
 		for (Ray& r2: b2.rays) {
-			r1.ray_intersections(r2);
+			ray_intersections(r1, r2);
 		}
 	}
 }
@@ -71,16 +67,8 @@ void save_beam_to_file(Beam& beam, const std::string& beam_name) {
 	myFile.close();
 }
 
-void save_intersections(Beam& beam) {
-	std::ofstream myFile("intersections.csv");
-
-	for (int ray_num = 0; ray_num < beam.rays.size(); ++ray_num) {
-		for (auto i: beam.rays[ray_num].intersections) {
-			myFile << ray_num << ", " << i << std::endl;
-		}
-	}
-
-	myFile.close();
+inline void save_intersections(Beam& beam) {
+	save_beam_to_file(beam, "intersections");
 }
 
 #endif //CUCBET_BEAM_CUH

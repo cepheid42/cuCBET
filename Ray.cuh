@@ -12,17 +12,6 @@ public:
 	Point origin() const { return orig; }
 	Vec direction() const { return init_dir; }
 
-	void ray_intersections(Ray& r2) {
-		for(vec2& p1: path) {
-			for (vec2& p2: r2.path) {
-				if (p1 == p2) {
-					Point temp(p1);
-					intersections.emplace_back(temp);
-				}
-			}
-		}
-	}
-
 public:
 	Point orig;
 	Vec init_dir;
@@ -37,6 +26,14 @@ void draw_init_path(Ray& r, float range, int nt) {
 	}
 }
 
-
+void ray_intersections(Ray& r1, Ray& r2) {
+	for(vec2& p1: r1.path) {
+		for (vec2& p2: r2.path) {
+			if (p1 == p2) {
+				r1.intersections.emplace_back(p1);
+			}
+		}
+	}
+}
 
 #endif //CUCBET_RAY_CUH
