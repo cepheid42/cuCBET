@@ -12,6 +12,8 @@
 #include <limits>
 
 // Usings
+using std::max;
+using std::min;
 using std::pow;
 using std::sqrt;
 
