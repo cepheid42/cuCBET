@@ -30,8 +30,8 @@ void draw_init_path(Ray& r, int nt, double dt, double ncrit, Egrid& e) {
 	r.velocities.emplace_back((k1_xz * pow(c, 2)) / omega);
 
 	for (int t = 1; t < nt; ++t) {
-		auto x_start = r.orig[0];
-		auto z_start = r.orig[1];
+		auto x_start = get_x_index(r.orig[0]);
+		auto z_start = get_z_index(r.orig[1]);
 		auto next_v = r.velocities[t - 1] - pow(c, 2) / (2.0 * ncrit) * e.d_eden[x_start][z_start] * dt;
 		auto next_p = r.path[t - 1] + next_v * dt;
 

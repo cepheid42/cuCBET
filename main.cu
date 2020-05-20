@@ -25,6 +25,8 @@ int main() {
 
 	/* Todo:
 	 * - Figure out electron grid stuff
+	 *      - Redo file output
+	 * 
 	 * - Add power weighting to rays (intensities and what not)
 	 * - Determine which code can be parallelized
 	 * - Put everything in unified memory for CUDA
