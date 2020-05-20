@@ -2,6 +2,7 @@
 #define CUCBET_RAY_CUH
 
 #include "vec2.cuh"
+#include "Egrid.cuh"
 
 class Ray {
 public:
@@ -10,29 +11,28 @@ public:
 		path.emplace_back(orig);
 	}
 
-	Point origin() const { return orig; }
-	Vec direction() const { return init_dir; }
-
 public:
 	double wpe = 1.6970185e15;
 	Point orig;
 	Vec init_dir;
 	std::vector<Point> path;
-	std::vector<Point> velocities;
-	std::vector<double> intensities;
-
+	std::vector<Vec> velocities;
 };
 
 
-void draw_init_path(Ray& r, int nt, double dt, double ncrit) {
-	Point d_eden(1.809914e24, 0.0);
+void draw_init_path(Ray& r, int nt, double dt, double ncrit, Egrid& e) {
+	// This function has loop dependence on t,
+	// probably cannot be fully parallelized
+
 	double k = std::sqrt((pow(omega, 2) - pow(r.wpe, 2)) / pow(c, 2));
-	auto k1_xz = k * r.init_dir;
+	auto k1_xz = k * r.init_dir;    // init_dir is already a unit vector
 
 	r.velocities.emplace_back((k1_xz * pow(c, 2)) / omega);
 
 	for (int t = 1; t < nt; ++t) {
-		auto next_v = r.velocities[t - 1] - pow(c, 2) / (2.0 * ncrit) * d_eden * dt;
+		auto x_start = r.orig[0];
+		auto z_start = r.orig[1];
+		auto next_v = r.velocities[t - 1] - pow(c, 2) / (2.0 * ncrit) * e.d_eden[x_start][z_start] * dt;
 		auto next_p = r.path[t - 1] + next_v * dt;
 
 		r.path.emplace_back(next_p);

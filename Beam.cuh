@@ -24,6 +24,8 @@ public:
 };
 
 void init_beam(Beam& b, double x_start, double z_start, double step, double dt, int nt, double ncrit) {
+	// Each ray can be initialized independently
+	// So parallelize this entire function
 	for (int r = 0; r < b.nrays; ++r) {
 		Point ray_orig(x_start, z_start);
 
@@ -54,7 +56,7 @@ void save_beam_to_file(Beam& beam, const std::string& beam_name) {
 	myFile << std::setprecision(std::numeric_limits<double>::max_digits10);
 
 	for (int ray_num = 0; ray_num < beam.rays.size(); ++ray_num) {
-		for (auto j : beam.rays[ray_num].path) {
+		for (const auto& j : beam.rays[ray_num].path) {
 			myFile << ray_num << ", " << j << std::endl;
 		}
 	}

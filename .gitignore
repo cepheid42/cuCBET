@@ -3,3 +3,4 @@ cmake-build-debug
 CMakeLists.txt
 *.csv
 a.out
+run
