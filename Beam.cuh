@@ -6,33 +6,54 @@
 class Beam {
 public:
 	Beam() = delete;
-	Beam(int beam_id, double b_min, double b_max, int num_rays, Vec dir) :
+	Beam(int beam_id, int num_rays, const Vec& dir) :
 		beam_num(beam_id),
 		nrays(num_rays),
-		beam_min(b_min),
-		beam_max(b_max),
 		direction(unit_vector(dir))
-	{}
+	{
+		// Initialize e_dep matrix
+		edep = new double*[nz + 2];
+		for (int i = 0; i < nz + 2; ++i) {
+			edep[i] = new double[nx + 2];
+		}
+	}
+
+	~Beam() {
+		for (int i = 0; i < nz + 2; ++i) {
+			delete[] edep[i];
+		}
+		delete[] edep;
+	}
 
 public:
 	int beam_num;
 	int nrays;
-	double beam_min;
-	double beam_max;
 	Vec direction;
 	std::vector<Ray> rays;
+	double **edep;          // (nz + 2, nx + 2), each beam tracks it's electron deposition
 };
 
-void init_beam(Beam& b, double x_start, double z_start, double step, double dt, int nt, double ncrit) {
+void init_beam(Beam& b, Egrid& eg, double x_start, double z_start, double step, double dt, int nt, double ncrit) {
 	// Each ray can be initialized independently
 	// So parallelize this entire function
-	for (int r = 0; r < b.nrays; ++r) {
-		Point ray_orig(x_start, z_start);
+	double phase_x = beam_min_z;
+	double phase_step = (beam_max_z - beam_min_z) / (nrays - 1);
+	double pow_x = exp(-1 * pow(pow(phase_x / sigma, 2.0), 2.0));
 
-		Ray ray1(ray_orig, b.direction);
-		draw_init_path(ray1, nt, dt, ncrit);
+	for (int r = 0; r < b.nrays; ++r) {
+		double power;
+		if (b.beam_num == 0) {
+			power = uray_mult * interp(b.direction.z(), phase_x + offset, pow_x);
+		} else {
+			power = uray_mult * interp(b.direction.x(), phase_x, pow_x);
+		}
+
+		Point ray_orig(x_start, z_start);
+		Ray ray1(ray_orig, b.direction, power);
+		draw_init_path(ray1, nt, dt, ncrit, eg, &(b.edep));
 		b.rays.emplace_back(ray1);
 
+		phase_x += phase_step;
 		if (b.beam_num == 0) {
 			z_start += step;
 		} else {
@@ -41,31 +62,22 @@ void init_beam(Beam& b, double x_start, double z_start, double step, double dt, 
 	}
 }
 
-//void find_intersections(Beam& b1, Beam& b2) {
-//	for (Ray& r1: b1.rays) {
-//		for (Ray& r2: b2.rays) {
-//			ray_intersections(r1, r2);
-//		}
-//	}
-//}
-
-
 // Utility Functions
 void save_beam_to_file(Beam& beam, const std::string& beam_name) {
-	std::ofstream myFile(beam_name + ".csv");
-	myFile << std::setprecision(std::numeric_limits<double>::max_digits10);
+	std::ofstream beam_file(beam_name + ".csv");
+	beam_file << std::setprecision(std::numeric_limits<double>::max_digits10);
 
 	for (int ray_num = 0; ray_num < beam.rays.size(); ++ray_num) {
 		for (const auto& j : beam.rays[ray_num].path) {
-			myFile << ray_num << ", " << j << std::endl;
+			beam_file << ray_num << ", " << j << std::endl;
 		}
 	}
 
-	myFile.close();
-}
+	beam_file.close();
 
-//inline void save_intersections(Beam& beam) {
-//	save_beam_to_file(beam, "intersections");
-//}
+	std::ofstream beam_edep(beam_name + "_edep.csv");
+	save_2d_grid(beam_edep, beam.edep, nx, nz);
+	beam_edep.close();
+}
 
 #endif //CUCBET_BEAM_CUH
