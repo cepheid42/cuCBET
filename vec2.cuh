@@ -86,15 +86,15 @@ inline vec2 operator*(double t, const vec2 &v) {
 	return vec2(t*v.e[0], t*v.e[1]);
 }
 
-inline vec2 operator*(const vec2 &v, double t) {
+inline vec2 operator*(const vec2& v, double t) {
 	return t * v;
 }
 
-inline vec2 operator/(vec2 v, double t) {
+inline vec2 operator/(const vec2& v, double t) {
 	return (1/t) * v;
 }
 
-inline vec2 unit_vector(vec2 v) {
+inline vec2 unit_vector(const vec2& v) {
 	return v / v.length();
 }
 
