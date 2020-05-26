@@ -10,37 +10,41 @@ public:
 	Egrid() = default;
 
 public:
-	array<array<double, nx>, nz> eden{};
-	array<array<Point, nx>, nz> d_eden;
-	array<array<Point, nx>, nz> W;
-	array<array<Point, nx>, nz> W_new;
-	std::array<std::array<double, nx>, nz> present{};
+	array<array<float, nx>, ny> eden{};
+	array<array<Point, nx>, ny> d_eden;
+	array<array<Point, nx>, ny> W;
+	array<array<Point, nx>, ny> W_new;
 };
 
 void init_eden_derivs(Egrid& eg) {
 	// This function may possible be parallelizable...
-	for (int i = 0; i < nz - 1; ++i) {
-		for (int j = 0; j < nx - 1; ++j) {
-			eg.d_eden[i][j][0] = (eg.eden[i][j + 1] - eg.eden[i][j]) / (get_grid_val(j + 1, xmax, xmin, nx) - get_grid_val(j, xmax, xmin, nx));
-			eg.d_eden[i][j][1] = (eg.eden[i + 1][j] - eg.eden[i][j]) / (get_grid_val(i + 1, zmax, zmin, nz) - get_grid_val(i, zmax, zmin, nz));
+	for (int y = 0; y < ny - 1; ++y) {
+		for (int x = 0; x < nx - 1; ++x) {
+			eg.d_eden[y][x][0] = (eg.eden[y][x + 1] - eg.eden[y][x]) / (get_grid_val(x + 1, xmax, xmin, nx) - get_grid_val(x, xmax, xmin, nx));
+			eg.d_eden[y][x][1] = (eg.eden[y + 1][x] - eg.eden[y][x]) / (get_grid_val(y + 1, ymax, ymin, ny) - get_grid_val(y, ymax, ymin, ny));
 		}
 	}
 
 	// set last column equal to previous column
-	for (int i = 0; i < nz - 1; ++i) {
-		eg.d_eden[nx - 1][i] = Point(eg.d_eden[nx - 2][i]);
+	for (int y = 0; y < ny; y++) {
+		eg.d_eden[y][nx - 1][0] = eg.d_eden[y][nx - 2][0];
+	}
+
+	// set last row equal to previous row
+	for (int x = 0; x < nx; x++) {
+		eg.d_eden[ny - 1][x][1] = eg.d_eden[ny - 2][x][1];
 	}
 }
 
-void init_egrid(Egrid& eg, double ncrit) {
+void init_egrid(Egrid& eg, float ncrit) {
 	// Todo: This does not output exactly the same as Yorick code, but is close (same order of mag, 9.12345xxxxxxxxxxxE+20)
-	for (int i = 0; i < nz; ++i) {
-		for (int j = 0; j < nx; ++j) {
-			double density = ((0.3 * ncrit - 0.1 * ncrit) / (xmax - xmin)) * (get_grid_val(j, xmax, xmin, nx) - xmin) + (0.1 * ncrit);
-			eg.eden[i][j] = max(density, 0.0);
+	for (int y = 0; y < ny; ++y) {
+		for (int x = 0; x < nx; ++x) {
+			float density = ((0.3f * ncrit - 0.1f * ncrit) / (xmax - xmin)) * (get_grid_val(x, xmax, xmin, nx) - xmin) + (0.1f * ncrit);
+			eg.eden[y][x] = std::max(density, 0.0f);
 
-			double w = sqrt(1 - eg.eden[i][j] / ncrit) / rays_per_zone;
-			eg.W[i][j] = Point(w, w);
+			float w = std::sqrt(1.0f - eg.eden[y][x] / ncrit) / float(rays_per_zone);
+			eg.W[y][x] = Point(w, w);
 		}
 	}
 	eg.W_new = eg.W;
@@ -50,46 +54,49 @@ void init_egrid(Egrid& eg, double ncrit) {
 // Utility Functions
 void save_egrid_to_files(Egrid& eg) {
 	std::ofstream eden_file("eden.csv");
-	eden_file << std::setprecision(std::numeric_limits<double>::max_digits10);
-	for (auto & row : eg.eden) {
-		for (auto &col: row) {
-			eden_file << col << ", ";
+	eden_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+	for (int i = 0; i < ny; i++) {
+		for (int j = 0; j < nx; j++) {
+			eden_file << eg.eden[i][j];
+			if (j != nx - 1) {
+				eden_file << ", ";
+			}
 		}
 		eden_file << "\n";
 	}
 	eden_file.close();
 
-	std::ofstream i_b1_file("i_b1.csv");
-	std::ofstream i_b2_file("i_b2.csv");
-	i_b1_file << std::setprecision(std::numeric_limits<double>::max_digits10);
-	i_b2_file << std::setprecision(std::numeric_limits<double>::max_digits10);
+//	std::ofstream i_b1_file("i_b1.csv");
+//	std::ofstream i_b2_file("i_b2.csv");
+//	i_b1_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//	i_b2_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//
+//	for (int j = 0; j < ny; j++) {
+//		for (int i = 0; i < nx; i++) {
+//			i_b1_file << eg.W[j][i][0] << ", ";
+//			i_b2_file << eg.W[j][i][1] << ", ";
+//		}
+//		i_b1_file << "\n";
+//		i_b2_file << "\n";
+//	}
+//	i_b1_file.close();
+//	i_b2_file.close();
 
-	for (int i = 0; i < nz; i++) {
-		for (int j = 0; j < nx; j++) {
-			i_b1_file << eg.W[i][j][0] << ", ";
-			i_b2_file << eg.W[i][j][1] << ", ";
-		}
-		i_b1_file << "\n";
-		i_b2_file << "\n";
-	}
-	i_b1_file.close();
-	i_b2_file.close();
-
-	std::ofstream i_b1_new_file("i_b1_new.csv");
-	std::ofstream i_b2_new_file("i_b2_new.csv");
-	i_b1_new_file << std::setprecision(std::numeric_limits<double>::max_digits10);
-	i_b2_new_file << std::setprecision(std::numeric_limits<double>::max_digits10);
-
-	for (int i = 0; i < nz; i++) {
-		for (int j = 0; j < nx; j++) {
-			i_b1_new_file << eg.W_new[i][j][0] << ", ";
-			i_b2_new_file << eg.W_new[i][j][1] << ", ";
-		}
-		i_b1_new_file << "\n";
-		i_b2_new_file << "\n";
-	}
-	i_b1_new_file.close();
-	i_b2_new_file.close();
+//	std::ofstream i_b1_new_file("i_b1_new.csv");
+//	std::ofstream i_b2_new_file("i_b2_new.csv");
+//	i_b1_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//	i_b2_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//
+//	for (int q = 0; q < ny; q++) {
+//		for (int p = 0; p < nx; p++) {
+//			i_b1_new_file << eg.W_new[q][p][0] << ", ";
+//			i_b2_new_file << eg.W_new[q][p][1] << ", ";
+//		}
+//		i_b1_new_file << "\n";
+//		i_b2_new_file << "\n";
+//	}
+//	i_b1_new_file.close();
+//	i_b2_new_file.close();
 }
 
 #endif //CUCBET_EGRID_CUH

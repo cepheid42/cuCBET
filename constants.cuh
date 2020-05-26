@@ -14,73 +14,75 @@
 #include <array>
 
 // Usings
-using std::max;
-using std::min;
-using std::pow;
-using std::sqrt;
+
 
 // Constant Values
-const float pi = 3.14159265;
+const float pi = 3.14159265f;
 
 const int nx = 201;
-double xmin = -5.0e-4;
-double xmax = 5.0e-4;
-double dx = (xmax - xmin) / double(nx - 1);
+float xmin = -5.0e-4f;
+float xmax = 5.0e-4f;
+float dx = (xmax - xmin) / float(nx - 1);
 
-const int nz = 201;
-double zmin = -5.0e-4;
-double zmax = 5.0e-4;
-double dz = (zmax - zmin) / double(nz - 1);
+const int ny = 201;
+float ymin = -5.0e-4f;
+float ymax = 5.0e-4f;
+float dy = (ymax - ymin) / float(ny - 1);
 
-double c = 29979245800.0;
-double e_0 = 8.85418782e-12;
-double m_e = 9.10938356e-31;
-double e_c = 1.60217662e-19;
+float c = 29979245800.0f;
+float e_0 = 8.85418782e-12f;
+float m_e = 9.10938356e-31f;
+float e_c = 1.60217662e-19f;
 
-double beam_max_z = 3.0e-4;
-double beam_min_z = -3.0e-4;
+float beam_max = 3.0e-4;
+float beam_min = -3.0e-4;
 
-double lambda = 1.053e-4 / 3.0;
-double freq = c / lambda;
-double omega = 2 * pi * freq;
+float lambda = 1.053e-4f / 3.0f;
+float freq = c / lambda;
+float omega = 2.0f * pi * freq;
 
-double courant_mult = 0.2;
-double offset = 0.5e-4;
-double intensity = 2.0e15;
-double sigma = 1.7e-4;
+float courant_mult = 0.2f;
+float offset = 0.5e-4f;
+float intensity = 2.0e15f;
+float sigma = 1.7e-4f;
 
 int rays_per_zone = 5;
-auto nrays = static_cast<int>(double(rays_per_zone) * (beam_max_z - beam_min_z) / dz);
+auto nrays = 25; //static_cast<int>(float(rays_per_zone) * (beam_max_z - beam_min_z) / dz);
 
-double uray_mult = intensity * courant_mult / rays_per_zone;
+float uray_mult = intensity * courant_mult / float(rays_per_zone);
 
-double estat = 4.80320427e-10;      // electron charge in statC
-double Z = 3.1;                     // ionization state
-double mi = 10230 * (1.0e3 * m_e);  // Mass of ion in g
-double mi_kg = 10230.0 * m_e;       // Mass of ion in kg
-double Te = 2.0e3 * 11604.5052;     // Temperature of electron in K
-double Te_eV = 2.0e3;
-double Ti = 1.0e3 * 11604.5052;     // Temperature of ion in K
-double Ti_eV = 1.0e3;
-double iaw = 0.2;                   // ion-acoustic wave energy-damping rate (nu_ia/omega_s)!!
-double kb = 1.3806485279e-16;       // Boltzmann constant in erg/K
-double kb2 = 1.3806485279e-23;      // Boltzmann constant in J/K
-double constant1 = pow(estat, 2.0) / (4 * (1.0e3 * m_e) * c * omega * kb * Te * (1 + 3 * Ti / (Z * Te)));
+float estat = 4.80320427e-10f;      // electron charge in statC
+float Z = 3.1f;                     // ionization state
+//float mi = 10230.0 * 1.0e3 * m_e;  // Mass of ion in g
+float mi_kg = 10230.0f * m_e;       // Mass of ion in kg
+float Te = 2.0e3f * 11604.5052f;     // Temperature of electron in K
+float Te_eV = 2.0e3f;
+float Ti = 1.0e3f * 11604.5052f;     // Temperature of ion in K
+float Ti_eV = 1.0e3f;
+float iaw = 0.2f;                   // ion-acoustic wave energy-damping rate (nu_ia/omega_s)!!
+float kb = 1.3806485279e-16f;       // Boltzmann constant in erg/K
+float kb2 = 1.3806485279e-23f;      // Boltzmann constant in J/K
+float constant1 = std::pow(estat, 2.0f) / (4.0f * (1.0e3f * m_e) * c * omega * kb * Te * (1.0f + 3.0f * Ti / (Z * Te)));
 
-double cs = 1e2 * sqrt(e_c * (Z * Te_eV + 3.0 * Ti_eV) / mi_kg);
+float cs = 100.0f * std::sqrt(e_c * (Z * Te_eV + 3.0f * Ti_eV) / mi_kg);
+
 		
 		
 // Utility Functions
-inline double get_grid_val(int i, double max, double min, int len) {
-	return min + (i * (max - min) / (len - 1));
+inline float get_grid_val(int i, float max, float min, int len) {
+	return min + (float(i) * (max - min) / float(len - 1));
 }
 
-inline int get_index(double v, double max, double min, int len) {
-	return static_cast<int>((len - 1) * (v - min) / (max - min));
+inline int get_x_index(float x, float max, float min, int N) {
+	return int(float(N - 1) * (x - min) / (max - min));
 }
 
-inline double interp(double x, double x0, double y0, double x1, double y1) {
-	return (y0 * (1 - (x - x0) / (x1 - x0))) + (y1 * ((x - x0) / (x1 - x0)));
+inline int get_y_index(float x, float max, float min, int N) {
+	return int(float(N - 1) * (x - max) / (min - max));
+}
+
+inline float interp(float x, float x0, float y0, float x1, float y1) {
+	return (y0 + (x - x0) * (y1 - y0) / (x1 - x0));
 }
 
 #endif //CUCBET_CONSTANTS_CUH
