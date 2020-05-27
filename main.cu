@@ -17,14 +17,12 @@ int main() {
 	auto nt = static_cast<int>(2.0f * std::max(nx, ny) / courant_mult);
 
 	std::vector<std::pair<float, float>> phase_power;
-
 	for (int i = 0; i < nrays; i++) {
-		auto phase = get_grid_val(i, beam_max, beam_min, nrays);
+		auto phase = get_x_val(i, beam_max, beam_min, nrays);
 		auto power = std::exp(-1.0f * std::pow(std::pow(phase / sigma, 2.0f), 2.0f));
 
 		phase_power.emplace_back(std::pair<float, float>(phase, power));
 	}
-
 	Interpolator phase_interp(phase_power);
 
 
@@ -67,23 +65,23 @@ int main() {
 	init_egrid(egrid, ncrit);
 
 	// Horizontal beam
-	Vec beam1_dir(1.0, 0.1);
+	Vec beam1_dir(1.0f, 0.1f);
 	Beam b1(0, nrays, beam1_dir);
 	float b1_x_start = xmin - (dt / courant_mult * c * 0.5f);
 	float b1_y_start = beam_min - (dy / 2.0f) - (dt / courant_mult * c * 0.5f);
-	float b1_y_step = (beam_max - beam_min) / (nrays - 1.0f);
+	float b1_y_step = (beam_max - beam_min) / float(nrays - 1);
 	init_beam(b1, egrid, b1_x_start, b1_y_start, b1_y_step, dt, nt, ncrit, phase_interp);
 
 	// Vertical beam
-	Vec beam2_dir(0.0, 1.0);
+	Vec beam2_dir(0.0f, 1.0f);
 	Beam b2(1, nrays, beam2_dir);
 	float b2_x_start = beam_min - (dx / 2.0f) - (dt / courant_mult * c * 0.5f);
-	float b2_x_step = (beam_max - beam_min) / (nrays - 1.0f);
+	float b2_x_step = (beam_max - beam_min) / float(nrays - 1);
 	float b2_y_start = ymin - (dt / courant_mult * c * 0.5f);
 	init_beam(b2, egrid, b2_x_start, b2_y_start, b2_x_step, dt, nt, ncrit, phase_interp);
 
-//	calc_gain(b1, b2, egrid, ncrit);
-//	calc_intensity(b1, b2, egrid);
+	calc_gain(b1, b2, egrid, ncrit);
+	calc_intensity(b1, b2, egrid);
 
 	save_beam_to_file(b1, "beam1");
 	save_beam_to_file(b2, "beam2");

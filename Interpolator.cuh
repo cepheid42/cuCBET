@@ -1,6 +1,11 @@
 #ifndef CUCBET_INTERPOLATOR_CUH
 #define CUCBET_INTERPOLATOR_CUH
 
+/*
+ * This code is borrowed *without* explicit permission from
+ * https://bulldozer00.blog/2016/05/10/linear-interpolation-in-c/
+ */
+
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
