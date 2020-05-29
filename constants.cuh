@@ -47,7 +47,7 @@ const float intensity = 2.0e15f;
 const float sigma = 1.7e-4f;
 
 const int rays_per_zone = 5;
-const auto nrays = 25; //static_cast<int>(float(rays_per_zone) * (beam_max - beam_min) / dy);
+const auto nrays = 100; //static_cast<int>(float(rays_per_zone) * (beam_max - beam_min) / dy);
 
 const float uray_mult = intensity * courant_mult / float(rays_per_zone);
 

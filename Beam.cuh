@@ -154,8 +154,8 @@ void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
 						float frac_change_1 = -1.0f * (1.0f - (eg.W_new[iy1][ix1][0] / eg.W[iy1][ix1][0])) * b1.edep[iy1][ix1];
 						float frac_change_2 = -1.0f * (1.0f - (eg.W_new[iy1][ix1][1] / eg.W[iy1][ix1][1])) * b2.edep[iy1][ix1];
 
-						b1.edep_new[iy1][ix1] += frac_change_1 / rays_per_zone; // Rays per zone, what does it do?
-						b2.edep_new[iy1][ix1] += frac_change_2 / rays_per_zone;
+						b1.edep_new[iy1][ix1] += frac_change_1;
+						b2.edep_new[iy1][ix1] += frac_change_2;
 
 						for (int q1 = i1 + 1; q1 < r1.path.size(); q1++) {
 							auto ix_cur = get_x_index(r1.path[q1].x(), xmax, xmin, nx);
