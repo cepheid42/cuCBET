@@ -52,6 +52,7 @@ void init_egrid(Egrid& eg, float ncrit) {
 
 // Utility Functions
 void save_egrid_to_files(Egrid& eg) {
+	// Write eden to file
 	std::ofstream eden_file("eden.csv");
 	eden_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {
@@ -64,38 +65,6 @@ void save_egrid_to_files(Egrid& eg) {
 		eden_file << "\n";
 	}
 	eden_file.close();
-
-	std::ofstream i_b1_file("i_b1.csv");
-	std::ofstream i_b2_file("i_b2.csv");
-	i_b1_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-	i_b2_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-
-	for (int k = ny - 1; k >= 0; k--) {
-		for (int l = 0; l < nx; l++) {
-			i_b1_file << eg.W[k][l][0] << ", ";
-			i_b2_file << eg.W[k][l][1] << ", ";
-		}
-		i_b1_file << "\n";
-		i_b2_file << "\n";
-	}
-	i_b1_file.close();
-	i_b2_file.close();
-
-	std::ofstream i_b1_new_file("i_b1_new.csv");
-	std::ofstream i_b2_new_file("i_b2_new.csv");
-	i_b1_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-	i_b2_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-
-	for (int q = ny - 1; q >= 0; q--) {
-		for (int p = 0; p < nx; p++) {
-			i_b1_new_file << eg.W_new[q][p][0] << ", ";
-			i_b2_new_file << eg.W_new[q][p][1] << ", ";
-		}
-		i_b1_new_file << "\n";
-		i_b2_new_file << "\n";
-	}
-	i_b1_new_file.close();
-	i_b2_new_file.close();
 }
 
 #endif //CUCBET_EGRID_CUH

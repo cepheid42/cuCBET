@@ -3,7 +3,7 @@
 
 #include "Ray.cuh"
 #include "Interpolator.cuh"
-
+#include <iostream>
 
 class Beam {
 public:
@@ -49,49 +49,87 @@ void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step, flo
 	}
 }
 
+void find_intersections(Beam& b1, Beam& b2, float dt) {
+	for (auto& r1: b1.rays) {
+		for (int i = 0; i < r1.path.size(); i++) {
+			auto p1 = r1.path[i];
+			auto ix1 = get_x_index(p1.x(), xmax, xmin, nx);
+			auto iy1 = get_y_index(p1.y(), ymax, ymin, ny);
+
+			for (auto& r2: b2.rays) {
+				std::vector<std::pair<float, int>> valid_points;
+
+				for (int j = 0; j < r2.path.size(); j++) {
+					auto p2 = r2.path[j];
+					auto ix2 = get_x_index(p2.x(), xmax, xmin, nx);
+					auto iy2 = get_y_index(p2.y(), ymax, ymin, ny);
+
+					if (ix1 == ix2 && iy1 == iy2) {
+						auto dist = (p2 - p1).length();
+						valid_points.emplace_back(std::pair<float, int>(dist, j));
+						continue;
+					}
+					else if (iy1 > iy2) {   // y index increases down, so if y1 > y2 then ray2 has gone past ray1
+						if (!valid_points.empty()) {
+							auto valid_p2 = *std::min_element(valid_points.begin(), valid_points.end());
+
+							r1.intersections.emplace_back(i);
+							r2.intersections.emplace_back(valid_p2.second);
+						}
+						break;
+					}
+					else {
+						continue;
+					}
+				}
+			}
+		}
+	}
+}
 
 void calc_gain(Beam& b1, Beam& b2, Egrid& eg, float ncrit) {
-	for (auto& r1: b1.rays) {   // Rays in Beam 1
-		auto p1_start = get_x_index(b2.rays.front().orig.x(), xmax, xmin, nx);
-		auto p1_end = get_x_index(b2.rays.back().orig.x(), xmax, xmin, nx);
+	for (auto& r1: b1.rays) {
+		for (auto i1: r1.intersections) {
+			auto p1 = r1.path[i1];
+			auto ix1 = get_x_index(p1.x(), xmax, xmin, nx);
+			auto iy1 = get_y_index(p1.y(), ymax, ymin, ny);
 
-		for (auto & r2: b2.rays) {  // Rays in Beam 2
-			auto p2_start = get_y_index(b1.rays.front().orig.y(), ymax, ymin, ny);
-			auto p2_end = get_y_index(b1.rays.back().orig.y(), ymax, ymin, ny);
+			for (auto& r2: b2.rays) {
+				for (auto i2: r2.intersections){
+					auto p2 = r2.path[i2];
+					auto ix2 = get_x_index(p2.x(), xmax, xmin, nx);
+					auto iy2 = get_y_index(p2.y(), ymax, ymin, ny);
 
-			for (int p1 = p1_start; p1 < p1_end; p1++) {   // Ray 1 points
-				for (int p2 = p2_start; p2 < p2_end; p2++) {   // Ray 2 point
-					auto ix = get_x_index(r1.path[p1].x(), xmax, xmin, nx);
-					auto iz = get_y_index(r1.path[p1].y(), ymax, ymin, ny);
+					if (ix1 == ix2 && iy1 == iy2) { // Double check, why not.
+						auto next_p1 = r1.path[i1 + 1];
+						auto dk1 = next_p1 - p1;
 
-					auto ix2 = get_x_index(r2.path[p2].x(), xmax, xmin, nx);
-					auto iz2 = get_y_index(r2.path[p2].y(), ymax, ymin, ny);
+						auto next_p2 = r2.path[i2 + 1];
+						auto dk2 = next_p2 - p2;
 
-					if (ix == ix2 && iz == iz2) {   // Ray 1 and Ray 2 have same logical indices (same box)
-						auto dk1 = r1.path[p1 + 1] - r1.path[p1];
-						auto dk2 = r2.path[p2 + 1] - r2.path[p2];
-
-						auto ne = eg.eden[iz][ix];
+						auto ne = eg.eden[iy1][ix1];
 						auto epsilon = std::sqrt(1.0f - ne / ncrit);
 
 						auto kmag = (omega / c) * epsilon;
 
-						auto k1 = kmag * (dk1 / dk1.length());
-						auto k2 = kmag * (dk2 / dk2.length());
+						auto k1 = kmag * unit_vector(dk1);
+						auto k2 = kmag * unit_vector(dk2);
 
-						auto kiaw = std::sqrt(std::pow(k2[0] - k1[0], 2.0f) + std::pow(k2[1] - k2[1], 2.0f));
+						auto kiaw = std::sqrt(std::pow(k2.x() - k1.x(), 2.0f) + std::pow(k2.y() - k1.y(), 2.0f));
 						auto ws = kiaw * cs;
 
-						auto machnum = (((-0.4f) - (-2.4f)) / (xmax - xmin)) * (get_x_val(ix, xmax, xmin, nx) - xmin) + (-2.4f);
+						auto machnum = (((-0.4f) - (-2.4f)) / (xmax - xmin)) * (get_x_val(ix1, xmax, xmin, nx) - xmin) + (-2.4f);
 						auto u_flow = std::max(machnum, 0.0f) * cs;
-						auto eta = ((omega - omega) - (k2[0] - k1[0]) * u_flow) / (ws + 1.0e-10f);   // omega is not changed in this code
+						auto eta = ((omega - omega) - (k2.x() - k1.x()) * u_flow) / (ws + 1.0e-10f);   // omega is not changed in this code
 
-						auto efield1 = std::sqrt(8.0f * pi * 1.0e7f * b1.edep[iz][ix] / c);
+						auto efield1 = std::sqrt(8.0f * pi * 1.0e7f * b1.edep[iy1][ix1] / c);
 						auto P = (std::pow(iaw, 2.0f) * eta) / (std::pow(std::pow(eta, 2.0f) - 1.0f, 2.0f) + std::pow(iaw, 2.0f) * std::pow(eta, 2.0f));
 						auto gain2 = constant1 * std::pow(efield1, 2.0f) * (ne / ncrit) * (1.0f / iaw) * P;
 
-						eg.W_new[iz][ix][0] = eg.W[iz][ix][0] * std::exp(1 * eg.W[iz][ix][1] * dk1.length() * gain2 / epsilon);
-						eg.W_new[iz][ix][1] = eg.W[iz][ix][1] * std::exp(-1 * eg.W[iz][ix][0] * dk2.length() * gain2 / epsilon);
+						// Update W1_new
+						eg.W_new[iy1][ix1][0] = eg.W[iy1][ix1][0] * std::exp(1 * eg.W[iy1][ix1][1] * dk1.length() * gain2 / epsilon);
+						// Update W2_new
+						eg.W_new[iy1][ix1][1] = eg.W[iy1][ix1][1] * std::exp(-1 * eg.W[iy1][ix1][0] * dk2.length() * gain2 / epsilon);
 					}
 				}
 			}
@@ -100,51 +138,46 @@ void calc_gain(Beam& b1, Beam& b2, Egrid& eg, float ncrit) {
 }
 
 void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
-	for (auto& r1: b1.rays) {   // Rays in Beam 1
-		auto p1_start = get_x_index(b2.rays.front().orig.x(), xmax, xmin, nx);
-		auto p1_end = get_x_index(b2.rays.back().orig.x(), xmax, xmin, nx);
+	for (auto& r1: b1.rays) {
+		for (auto i1: r1.intersections) {
+			auto p1 = r1.path[i1];
+			auto ix1 = get_x_index(p1.x(), xmax, xmin, nx);
+			auto iy1 = get_y_index(p1.y(), ymax, ymin, ny);
 
-		for (auto & r2: b2.rays) {  // Rays in Beam 2
-			auto p2_start = get_y_index(b1.rays.front().orig.y(), ymax, ymin, ny);
-			auto p2_end = get_y_index(b1.rays.back().orig.y(), ymax, ymin, ny);
+			for (auto& r2: b2.rays) {
+				for (auto i2: r2.intersections){
+					auto p2 = r2.path[i2];
+					auto ix2 = get_x_index(p2.x(), xmax, xmin, nx);
+					auto iy2 = get_y_index(p2.y(), ymax, ymin, ny);
 
-			for (int p1 = p1_start; p1 < p1_end; p1++) {   // Ray 1 points
-				for (int p2 = p2_start; p2 < p2_end; p2++) {   // Ray 2 point
-					auto ix = get_x_index(r1.path[p1].x(), xmax, xmin, nx);
-					auto iz = get_y_index(r1.path[p1].y(), ymax, ymin, ny);
+					if (ix1 == ix2 && iy1 == iy2) { // Double check again.
+						float frac_change_1 = -1.0f * (1.0f - (eg.W_new[iy1][ix1][0] / eg.W[iy1][ix1][0])) * b1.edep[iy1][ix1];
+						float frac_change_2 = -1.0f * (1.0f - (eg.W_new[iy1][ix1][1] / eg.W[iy1][ix1][1])) * b2.edep[iy1][ix1];
 
-					auto ix2 = get_x_index(r2.path[p2].x(), xmax, xmin, nx);
-					auto iz2 = get_y_index(r2.path[p2].y(), ymax, ymin, ny);
+						b1.edep_new[iy1][ix1] += frac_change_1 / rays_per_zone; // Rays per zone, what does it do?
+						b2.edep_new[iy1][ix1] += frac_change_2 / rays_per_zone;
 
-					if (ix == ix2 && iz == iz2) {   // Ray 1 and Ray 2 have same logical indices (same box)
-						float frac_change_1 = -1.0f * (1.0f - (eg.W_new[iz][ix][0] / eg.W[iz][ix][0])) * b1.edep[iz][ix];
-						float frac_change_2 = -1.0f * (1.0f - (eg.W_new[iz][ix][1] / eg.W[iz][ix][1])) * b2.edep[iz][ix];
-
-						b1.edep_new[iz][ix] += frac_change_1;
-						b2.edep_new[iz][ix] += frac_change_2;
-
-						for (int q1 = p1 + 1; q1 < r1.path.size(); q1++) {
+						for (int q1 = i1 + 1; q1 < r1.path.size(); q1++) {
 							auto ix_cur = get_x_index(r1.path[q1].x(), xmax, xmin, nx);
-							auto iz_cur = get_y_index(r1.path[q1].y(), ymax, ymin, ny);
+							auto iy_cur = get_y_index(r1.path[q1].y(), ymax, ymin, ny);
 
-							if (ix_cur == ix || iz_cur == iz) { // Prevent double deposition in same zone
-								b1.edep_new[iz_cur][ix_cur] += frac_change_1; // No correction for number of rays in zone;
+							if (ix_cur == ix1 || iy_cur == iy1) {   // Prevent double deposition in same zone
+								b1.edep_new[iy_cur][ix_cur] += frac_change_1;   // No correction for number of rays in zone (present in yorick)
 							}
-
-							ix = ix_cur;
-							iz = iz_cur;
+							ix1 = ix_cur;
+							iy1 = iy_cur;
 						}
 
-						for (int q2 = p2 + 1; q2 < r2.path.size(); q2++) {
+						for (int q2 = i2 + 1; q2 < r2.path.size(); q2++) {
 							auto ix_cur = get_x_index(r2.path[q2].x(), xmax, xmin, nx);
-							auto iz_cur = get_y_index(r2.path[q2].y(), ymax, ymin, ny);
+							auto iy_cur = get_y_index(r2.path[q2].y(), ymax, ymin, ny);
 
-							if (ix_cur == ix || iz_cur == iz) { // Prevent double deposition in same zone
-								b2.edep_new[iz_cur][ix_cur] += frac_change_1; // No correction for number of rays in zone;
+							if (ix_cur == ix2 || iy_cur == iy2) { // Prevent double deposition in same zone
+								b2.edep_new[iy_cur][ix_cur] += frac_change_1; // No correction for number of rays in zone (present in yorick)
 							}
 
-							ix = ix_cur;
-							iz = iz_cur;
+							ix2 = ix_cur;
+							iy2 = iy_cur;
 						}
 					}
 				}
@@ -155,16 +188,18 @@ void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
 
 // Utility Functions
 void save_beam_to_file(Beam& beam, const std::string& beam_name) {
+	// Write beam to file
 	std::ofstream beam_file(beam_name + ".csv");
 	beam_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 
 	for (int r = 0; r < beam.rays.size(); ++r) {
 		for (int i = 0; i < beam.rays[r].path.size(); i++) {
-			beam_file << r << ", " << beam.rays[r].path[i] << std::endl;
+			beam_file << r << ", " << beam.rays[r].path[i] << "\n";
 		}
 	}
 	beam_file.close();
 
+	// Write beam edep to file (i_b#)
 	std::ofstream edep_file(beam_name + "_edep.csv");
 	edep_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {
@@ -178,6 +213,7 @@ void save_beam_to_file(Beam& beam, const std::string& beam_name) {
 	}
 	edep_file.close();
 
+	// Write beam edep_new to file (i_b#_new)
 	std::ofstream edep_new_file(beam_name + "_edep_new.csv");
 	edep_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {

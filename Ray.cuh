@@ -10,6 +10,7 @@ public:
 	Ray(const Point& origin, const Vec& direction, float power, int nt) : orig(origin), init_dir(direction), init_power(power) {
 		path.reserve(nt);
 		group_v.reserve(nt);
+		intersections.reserve(nrays);
 	}
 
 public:
@@ -18,11 +19,12 @@ public:
 	float init_power{};
 	std::vector<Point> path;
 	std::vector<Vec> group_v;
+	std::vector<int> intersections;
 };
 
 bool ray_out_of_range(Point& p) {
 	bool valid_x = (p.x() < (xmin - (dx / 2.0f)) || p.x() > (xmax + (dx / 2.0f)));
-	bool valid_z = (p.y() < (ymin - (dy / 2.0f)) || p.y() > (ymax - (dy / 2.0f)));
+	bool valid_z = (p.y() < (ymin - (dy / 2.0f)) || p.y() > (ymax + (dy / 2.0f)));
 	return (valid_x || valid_z);
 }
 
@@ -55,7 +57,7 @@ void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, std::array
 		int x_pos = get_x_index(cur_p.x(), xmax, xmin, nx);
 		int y_pos = get_y_index(cur_p.y(), ymax, ymin, ny);
 
-		float xp = (cur_p.x() - (get_x_val(x_pos, xmax, xmin, nx) + dx / 2.0f)) / dx;
+		float xp = (cur_p.x() - (get_x_val(x_pos, xmax, xmin, nx) - dx / 2.0f)) / dx;
 		float yp = (cur_p.y() - (get_y_val(y_pos, ymax, ymin, ny) - dy / 2.0f)) / dy; // minus dy/2
 
 		float dl = std::abs(xp);
@@ -63,9 +65,9 @@ void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, std::array
 
 		// If uray is never updated, increment = init_power
 		float a1 = (1.0f - dl) * (1.0f - dm) * r.init_power;
-		float a2 = (1.0f - dl) * dm * r.init_power;
-		float a3 = dl * (1.0f - dm) * r.init_power;
-		float a4 = dl * dm * r.init_power;
+		float a2 = (1.0f - dl) * dm          * r.init_power;
+		float a3 = dl * (1.0f - dm)          * r.init_power;
+		float a4 = dl * dm                   * r.init_power;
 
 		if (xp >= 0 && yp >= 0) {
 			edep[y_pos    ][x_pos    ] += a1;   // Current

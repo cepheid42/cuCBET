@@ -42,12 +42,12 @@ const float freq = c / lambda;
 const float omega = 2.0f * pi * freq;
 
 const float courant_mult = 0.2f;
-const float offset = 0.5e-4f;
+//const float offset = 0.5e-4f;
 const float intensity = 2.0e15f;
 const float sigma = 1.7e-4f;
 
 const int rays_per_zone = 5;
-const auto nrays = static_cast<int>(float(rays_per_zone) * (beam_max - beam_min) / dy);
+const auto nrays = 25; //static_cast<int>(float(rays_per_zone) * (beam_max - beam_min) / dy);
 
 const float uray_mult = intensity * courant_mult / float(rays_per_zone);
 
@@ -61,7 +61,7 @@ const float Ti = 1.0e3f * 11604.5052f;     // Temperature of ion in K
 const float Ti_eV = 1.0e3f;
 const float iaw = 0.2f;                   // ion-acoustic wave energy-damping rate (nu_ia/omega_s)!!
 const float kb = 1.3806485279e-16f;       // Boltzmann constant in erg/K
-const float kb2 = 1.3806485279e-23f;      // Boltzmann constant in J/K
+//const float kb2 = 1.3806485279e-23f;      // Boltzmann constant in J/K
 
 
 float constant1 = std::pow(estat, 2.0f) / (4.0f * (1.0e3f * m_e) * c * omega * kb * Te * (1.0f + 3.0f * Ti / (Z * Te)));

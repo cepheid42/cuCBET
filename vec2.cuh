@@ -62,14 +62,6 @@ inline std::ostream& operator<<(std::ostream &out, const vec2 &v) {
 	return out << v.e[0] << ", " << v.e[1];
 }
 
-bool operator==(const vec2& u, const vec2& v) {
-	return (u[0] == v[0] && u[1] == v[1]);
-}
-
-bool operator!=(const vec2&u, const vec2& v) {
-	return !(u == v);
-}
-
 inline vec2 operator+(const vec2 &u, const vec2 &v) {
 	return vec2(u.e[0] + v.e[0], u.e[1] + v.e[1]);
 }
