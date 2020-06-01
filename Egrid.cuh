@@ -52,8 +52,10 @@ void init_egrid(Egrid& eg, float ncrit) {
 
 // Utility Functions
 void save_egrid_to_files(Egrid& eg) {
+	const std::string output_path = "./Outputs/";
+
 	// Write eden to file
-	std::ofstream eden_file("eden.csv");
+	std::ofstream eden_file(output_path + "eden.csv");
 	eden_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {
 		for (int j = 0; j < nx; j++) {

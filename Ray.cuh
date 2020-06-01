@@ -28,11 +28,15 @@ bool ray_out_of_range(Point& p) {
 	return (valid_x || valid_z);
 }
 
-void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, std::array<std::array<float, nx + 2>, ny + 2>& edep) {
+void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, array<array<float, nx + 2>, ny + 2>& edep, array<array<float, nx>, ny>& present) {
 	// This function has loop dependence on t,
 	// probably cannot be fully parallelized
 	auto ix = get_x_index(r.orig.x(), xmax, xmin, nx);
 	auto iy = get_y_index(r.orig.y(), ymax, ymin, ny);
+
+	auto track_x = ix;
+	auto track_y = iy;
+	present[iy][ix] += 1.0f;
 
 	float wpe = std::sqrt(eg.eden[iy][ix] * 1.0e6f * std::pow(e_c, 2.0f) / (m_e * e_0));
 
@@ -57,8 +61,15 @@ void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, std::array
 		int x_pos = get_x_index(cur_p.x(), xmax, xmin, nx);
 		int y_pos = get_y_index(cur_p.y(), ymax, ymin, ny);
 
+		// Track cells that ray passes through
+		if (x_pos != track_x || y_pos != track_y) {
+			present[track_y][track_x] += 1.0f;
+			track_x = x_pos;
+			track_y = y_pos;
+		}
+
 		float xp = (cur_p.x() - (get_x_val(x_pos, xmax, xmin, nx) - dx / 2.0f)) / dx;
-		float yp = (cur_p.y() - (get_y_val(y_pos, ymax, ymin, ny) - dy / 2.0f)) / dy; // minus dy/2
+		float yp = (cur_p.y() - (get_y_val(y_pos, ymax, ymin, ny) - dy / 2.0f)) / dy;
 
 		float dl = std::abs(xp);
 		float dm = std::abs(yp);
@@ -70,28 +81,28 @@ void draw_init_path(Ray& r, int nt, float dt, float ncrit, Egrid& eg, std::array
 		float a4 = dl * dm                   * r.init_power;
 
 		if (xp >= 0 && yp >= 0) {
-			edep[y_pos    ][x_pos    ] += a1;   // Current
-			edep[y_pos    ][x_pos + 1] += a2;   // Horizontal right
-			edep[y_pos + 1][x_pos    ] += a3;   // Vertical down
-			edep[y_pos + 1][x_pos + 1] += a4;   // Diagonal down-right
+			edep[y_pos + 1][x_pos + 1] += a1;
+			edep[y_pos + 1][x_pos + 2] += a2;
+			edep[y_pos + 2][x_pos + 1] += a3;
+			edep[y_pos + 2][x_pos + 2] += a4;
 		}
 		else if (xp < 0 && yp >= 0) {
-			edep[y_pos    ][x_pos    ] += a1;   // Current
-			edep[y_pos    ][x_pos + 1] += a2;   // Horizontal right
-			edep[y_pos - 1][x_pos    ] += a3;   // Vertical up
-			edep[y_pos - 1][x_pos + 1] += a4;   // Diagonal up-right
+			edep[y_pos + 1][x_pos + 1] += a1;
+			edep[y_pos + 1][x_pos + 0] += a2;
+			edep[y_pos + 2][x_pos + 1] += a3;
+			edep[y_pos + 2][x_pos + 0] += a4;
 		}
 		else if (xp >= 0 && yp < 0) {
-			edep[y_pos    ][x_pos    ] += a1;   // Current
-			edep[y_pos    ][x_pos - 1] += a2;   // Horizontal left
-			edep[y_pos + 1][x_pos    ] += a3;   // Vertical down
-			edep[y_pos + 1][x_pos - 1] += a4;   // Diagonal down-left
+			edep[y_pos + 1][x_pos + 1] += a1;
+			edep[y_pos + 1][x_pos + 2] += a2;
+			edep[y_pos + 0][x_pos + 1] += a3;
+			edep[y_pos + 0][x_pos + 2] += a4;
 		}
 		else if (xp < 0 && yp < 0) {
-			edep[y_pos    ][x_pos    ] += a1;   // Current
-			edep[y_pos    ][x_pos - 1] += a2;   // Horizontal left
-			edep[y_pos - 1][x_pos    ] += a3;   // Vertical up
-			edep[y_pos - 1][x_pos - 1] += a4;   // Diagonal up-left
+			edep[y_pos + 1][x_pos + 1] += a1;
+			edep[y_pos + 1][x_pos + 0] += a2;
+			edep[y_pos + 0][x_pos + 1] += a3;
+			edep[y_pos + 0][x_pos + 0] += a4;
 		}
 		else {
 			std::cout << "Error in deposition grid interpolation." << std::endl;

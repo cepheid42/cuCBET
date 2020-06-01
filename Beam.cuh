@@ -22,6 +22,7 @@ public:
 	std::vector<Ray> rays;
 	std::array<std::array<float, nx + 2>, ny + 2> edep{};  // Each beam tracks it's electron deposition
 	std::array<std::array<float, nx + 2>, ny + 2> edep_new{};
+	array<array<float, nx>, ny> present{};
 };
 
 void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step, float dt, int nt, float ncrit, Interpolator& interp) {
@@ -30,7 +31,7 @@ void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step, flo
 		float uray0;
 		if (b.beam_num == 0) {
 			// First beam goes left to right
-			uray0 = uray_mult * interp.findValue(y_start);
+			uray0 = uray_mult * interp.findValue(y_start + offset);
 		} else {
 			// Second beam goes bottom to top
 			uray0 = uray_mult * interp.findValue(x_start);
@@ -38,7 +39,7 @@ void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step, flo
 
 		Point ray_orig(x_start, y_start);
 		Ray ray1(ray_orig, b.direction, uray0, nt);
-		draw_init_path(ray1, nt, dt, ncrit, eg, b.edep);
+		draw_init_path(ray1, nt, dt, ncrit, eg, b.edep, b.present);
 		b.rays.emplace_back(ray1);
 
 		if (b.beam_num == 0) {
@@ -72,7 +73,6 @@ void find_intersections(Beam& b1, Beam& b2, float dt) {
 					else if (iy1 > iy2) {   // y index increases down, so if y1 > y2 then ray2 has gone past ray1
 						if (!valid_points.empty()) {
 							auto valid_p2 = *std::min_element(valid_points.begin(), valid_points.end());
-
 							r1.intersections.emplace_back(i);
 							r2.intersections.emplace_back(valid_p2.second);
 						}
@@ -162,7 +162,7 @@ void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
 							auto iy_cur = get_y_index(r1.path[q1].y(), ymax, ymin, ny);
 
 							if (ix_cur == ix1 || iy_cur == iy1) {   // Prevent double deposition in same zone
-								b1.edep_new[iy_cur][ix_cur] += frac_change_1;   // No correction for number of rays in zone (present in yorick)
+								b1.edep_new[iy_cur][ix_cur] += frac_change_1 * (b1.present[iy1][ix1] / b1.present[iy_cur][ix_cur]);
 							}
 							ix1 = ix_cur;
 							iy1 = iy_cur;
@@ -173,9 +173,8 @@ void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
 							auto iy_cur = get_y_index(r2.path[q2].y(), ymax, ymin, ny);
 
 							if (ix_cur == ix2 || iy_cur == iy2) { // Prevent double deposition in same zone
-								b2.edep_new[iy_cur][ix_cur] += frac_change_1; // No correction for number of rays in zone (present in yorick)
+								b2.edep_new[iy_cur][ix_cur] += frac_change_1 * (b1.present[iy1][ix1] / b1.present[iy_cur][ix_cur]);
 							}
-
 							ix2 = ix_cur;
 							iy2 = iy_cur;
 						}
@@ -188,8 +187,10 @@ void calc_intensity(Beam& b1, Beam& b2, Egrid& eg) {
 
 // Utility Functions
 void save_beam_to_file(Beam& beam, const std::string& beam_name) {
+	const std::string output_path = "./Outputs/";
+
 	// Write beam to file
-	std::ofstream beam_file(beam_name + ".csv");
+	std::ofstream beam_file(output_path + beam_name + ".csv");
 	beam_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 
 	for (int r = 0; r < beam.rays.size(); ++r) {
@@ -200,7 +201,7 @@ void save_beam_to_file(Beam& beam, const std::string& beam_name) {
 	beam_file.close();
 
 	// Write beam edep to file (i_b#)
-	std::ofstream edep_file(beam_name + "_edep.csv");
+	std::ofstream edep_file(output_path + beam_name + "_edep.csv");
 	edep_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {
 		for (int j = 0; j < nx; j++) {
@@ -214,7 +215,7 @@ void save_beam_to_file(Beam& beam, const std::string& beam_name) {
 	edep_file.close();
 
 	// Write beam edep_new to file (i_b#_new)
-	std::ofstream edep_new_file(beam_name + "_edep_new.csv");
+	std::ofstream edep_new_file(output_path + beam_name + "_edep_new.csv");
 	edep_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int i = ny - 1; i >= 0; i--) {
 		for (int j = 0; j < nx; j++) {
