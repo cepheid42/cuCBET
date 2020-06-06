@@ -3,64 +3,90 @@
 
 #include "vec2.cuh"
 
-using std::array;
-
-class Egrid {
+class Egrid: public Managed {
 public:
 	Egrid() = default;
 
+	void allocate(param_struct *pm) {
+		checkErr(cudaMallocManaged(&eden, pm->nx * pm->ny * sizeof(float)))
+		checkErr(cudaMallocManaged(&d_eden, pm->nx * pm->ny * sizeof(Point)));
+		checkErr(cudaMallocManaged(&W, pm->nx * pm->ny * sizeof(Point)));
+		checkErr(cudaMallocManaged(&W_new, pm->nx * pm->ny * sizeof(Point)));
+		checkErr(cudaDeviceSynchronize());
+	}
+
+	void deallocate() const {
+		checkErr(cudaDeviceSynchronize());
+		checkErr(cudaFree(eden));
+		checkErr(cudaFree(d_eden));
+		checkErr(cudaFree(W));
+		checkErr(cudaFree(W_new));
+	}
+
+
 public:
-	array<array<float, nx>, ny> eden{};
-	array<array<Point, nx>, ny> d_eden;
-	array<array<Point, nx>, ny> W;
-	array<array<Point, nx>, ny> W_new;
+	float* eden;
+	Point* d_eden;
+	Point* W;
+	Point* W_new;
 };
 
-void init_eden_derivs(Egrid& eg) {
+void init_eden_derivs(Egrid* eg, param_struct* pm) {
 	// This function may possible be parallelizable...
-	for (int y = 0; y < ny - 1; ++y) {
-		for (int x = 0; x < nx - 1; ++x) {
-			eg.d_eden[y][x][0] = (eg.eden[y][x + 1] - eg.eden[y][x]) / (get_x_val(x + 1, xmax, xmin, nx) - get_x_val(x, xmax, xmin, nx));
-			eg.d_eden[y][x][1] = (eg.eden[y + 1][x] - eg.eden[y][x]) / (get_y_val(y + 1, ymax, ymin, ny) - get_y_val(y, ymax, ymin, ny));
+	for (int y = 0; y < pm->ny - 1; y++) {
+		for (int x = 0; x < pm->nx - 1; x++) {
+			int index = y * pm->nx + x;
+			int x_ind = y * pm->nx + (x + 1);
+			int y_ind = (y + 1) * pm->nx + x;
+
+			eg->d_eden[index][0] = (eg->eden[x_ind] - eg->eden[index]) / (get_x_val(x + 1, pm->xmax, pm->xmin, pm->nx) - get_x_val(x, pm->xmax, pm->xmin, pm->nx));
+			eg->d_eden[index][1] = (eg->eden[y_ind] - eg->eden[index]) / (get_y_val(y + 1, pm->ymax, pm->ymin, pm->ny) - get_y_val(y, pm->ymax, pm->ymin, pm->ny));
 		}
 	}
 
 	// set last column equal to previous column
-	for (int y = 0; y < ny; y++) {
-		eg.d_eden[y][nx - 1] = eg.d_eden[y][nx - 2];
+	for (int y = 0; y < pm->ny; y++) {
+		int last = y * pm->nx + (pm->nx - 1);
+		int sec = y * pm->nx + (pm-> nx - 2);
+		eg->d_eden[last] = eg->d_eden[sec];
 	}
 
 	// set last row equal to previous row
-	for (int x = 0; x < nx; x++) {
-		eg.d_eden[ny - 1][x] = eg.d_eden[ny - 2][x];
+	for (int x = 0; x < pm->nx; x++) {
+		int last = (pm->ny - 1) * pm->nx + x;
+		int sec = (pm->ny - 2) * pm->nx + x;
+		eg->d_eden[last] = eg->d_eden[sec];
 	}
 }
 
-void init_egrid(Egrid& eg, float ncrit) {
-	for (int y = 0; y < ny; ++y) {
-		for (int x = 0; x < nx; ++x) {
-			float density = ((0.3f * ncrit - 0.1f * ncrit) / (xmax - xmin)) * (get_x_val(x, xmax, xmin, nx) - xmin) + (0.1f * ncrit);
-			eg.eden[y][x] = std::max(density, 0.0f);
+void init_egrid(Egrid* eg, param_struct* pm) {
+	for (int y = 0; y < pm->ny; y++) {
+		for (int x = 0; x < pm->nx; x++) {
+			int index = y * pm->nx + x;
 
-			float w = std::sqrt(1.0f - eg.eden[y][x] / ncrit) / float(rays_per_zone);
-			eg.W[y][x] = Point(w, w);
+			float density = ((0.3f * pm->ncrit - 0.1f * pm->ncrit) / (pm->xmax - pm->xmin)) * (get_x_val(x, pm->xmax, pm->xmin, pm->nx) - pm->xmin) + (0.1f * pm->ncrit);
+			eg->eden[index] = std::max(density, 0.0f);
+
+			float w = std::sqrt(1.0f - eg->eden[index] / pm->ncrit); // / float(rays_per_zone);
+			eg->W[index] = Point(w, w);
+			eg->W_new[index] = Point(w, w);
 		}
 	}
-	eg.W_new = eg.W;
-	init_eden_derivs(eg);
+	init_eden_derivs(eg, pm);
 }
 
 // Utility Functions
-void save_egrid_to_files(Egrid& eg) {
+void save_egrid_to_files(Egrid* eg, param_struct* pm) {
 	const std::string output_path = "./Outputs/";
 
 	// Write eden to file
 	std::ofstream eden_file(output_path + "eden.csv");
 	eden_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-	for (int i = ny - 1; i >= 0; i--) {
-		for (int j = 0; j < nx; j++) {
-			eden_file << eg.eden[i][j];
-			if (j != nx - 1) {
+	for (int i = pm->ny - 1; i >= 0; i--) {
+		for (int j = 0; j < pm->nx; j++) {
+			int index = i * pm->nx + j;
+			eden_file << eg->eden[index];
+			if (j != pm->nx - 1) {
 				eden_file << ", ";
 			}
 		}

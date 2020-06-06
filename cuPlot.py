@@ -167,19 +167,19 @@ if __name__ == '__main__':
     try:
         i_b1 = np.genfromtxt(output_path + 'beam1_edep.csv', delimiter=',', dtype=np.float32)
     except:
-        i_b1 = np.empty((nx, ny))
+        i_b1 = np.zeros((nx, ny))
     try:
         i_b2 = np.genfromtxt(output_path + 'beam2_edep.csv', delimiter=',', dtype=np.float32)
     except:
-        i_b2 = np.empty((nx, ny))
+        i_b2 = np.zeros((nx, ny))
     try:
         i_b1_new = np.genfromtxt(output_path + 'beam1_edep_new.csv', delimiter=',', dtype=np.float32)
     except:
-        i_b1_new = np.empty((nx, ny))
+        i_b1_new = np.zeros((nx, ny))
     try:
         i_b2_new = np.genfromtxt(output_path + 'beam2_edep_new.csv', delimiter=',', dtype=np.float32)
     except:
-        i_b2_new = np.empty((nx, ny))
+        i_b2_new = np.zeros((nx, ny))
 
     plot_rays(beam1, beam2)
     plot_intensity(i_b1, i_b2)

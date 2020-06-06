@@ -10,8 +10,9 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include "Gpu_utils.cuh"
 
-class Interpolator {
+class Interpolator: Managed {
 public:
 	//On construction, we take in a vector of data point pairs
 	//that represent the line we will use to interpolate
@@ -44,8 +45,7 @@ public:
 				{return point.first < x;};
 
 		//Find the first table entry whose value is >= caller's x value
-		auto iter =
-				std::lower_bound(_points.cbegin(), _points.cend(), x, lessThan);
+		auto iter = std::lower_bound(_points.cbegin(), _points.cend(), x, lessThan);
 
 		//If the caller's X value is greater than the largest
 		//X value in the table, we can't interpolate.
@@ -77,5 +77,20 @@ private:
 	//std::pair::<float, float>.second = y value
 	std::vector<std::pair<float, float>> _points;
 };
+
+
+Interpolator phase_interpolator(int nrays, float beam_max, float beam_min) {
+	const float sigma = 1.7e-4f;
+	std::vector<std::pair<float, float>> phase_power;
+
+	for (int i = 0; i < nrays; i++) {
+		auto phase = beam_min + (float(i) * (beam_max - beam_min) / float(nrays - 1));
+		auto power = std::exp(-1.0f * std::pow(std::pow(phase / sigma, 2.0f), 2.0f));
+
+		phase_power.emplace_back(std::pair<float, float>(phase, power));
+	}
+
+	return Interpolator(phase_power);
+}
 
 #endif //CUCBET_INTERPOLATOR_CUH
