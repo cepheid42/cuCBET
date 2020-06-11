@@ -1,6 +1,6 @@
 .idea
 cmake-build-debug
 CMakeLists.txt
-*.csv
+Outputs
 a.out
 run

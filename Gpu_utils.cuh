@@ -1,7 +1,7 @@
 #ifndef CUCBET_GPU_UTILS_CUH
 #define CUCBET_GPU_UTILS_CUH
 
-#include <iostream>
+#define __hd__ __host__ __device__
 
 // Error Checking for CUDA functions
 #define checkErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
