@@ -3,16 +3,8 @@
 
 #include "vec2.cuh"
 
-class Egrid: public Managed {
+class Egrid {
 public:
-	Egrid() {
-		checkErr(cudaMallocManaged(&eden,   nx * ny * sizeof(float)));
-		checkErr(cudaMallocManaged(&d_eden, nx * ny * sizeof(Point)))
-		checkErr(cudaMallocManaged(&W,      nx * ny * sizeof(Point)))
-		checkErr(cudaMallocManaged(&W_new,  nx * ny * sizeof(Point)))
-		checkErr(cudaDeviceSynchronize());
-	}
-
 	~Egrid() {
 		checkErr(cudaDeviceSynchronize());
 		checkErr(cudaFree(eden));
@@ -21,11 +13,19 @@ public:
 		checkErr(cudaFree(W_new));
 	}
 
+	void allocate() {
+		checkErr(cudaMallocManaged(&eden,   nx * ny * sizeof(float)));
+		checkErr(cudaMallocManaged(&d_eden, nx * ny * sizeof(Point)))
+		checkErr(cudaMallocManaged(&W,      nx * ny * sizeof(Point)))
+		checkErr(cudaMallocManaged(&W_new,  nx * ny * sizeof(Point)))
+		checkErr(cudaDeviceSynchronize());
+	}
+
 public:
-	float* eden;
-	Point* d_eden;
-	Point* W;
-	Point* W_new;
+	float* eden{};
+	Point* d_eden{};
+	Point* W{};
+	Point* W_new{};
 };
 
 void init_eden_derivs(Egrid& eg) {
@@ -33,11 +33,11 @@ void init_eden_derivs(Egrid& eg) {
 	for (int y = 0; y < ny - 1; y++) {
 		for (int x = 0; x < nx - 1; x++) {
 			int index = y * nx + x;
-			int x_ind = y * nx + (x + 1);
-			int y_ind = (y + 1) * nx + x;
+			int x_inc = y * nx + (x + 1);
+			int y_inc = (y + 1) * nx + x;
 
-			eg.d_eden[index][0] = (eg.eden[x_ind] - eg.eden[index]) / (get_x_val(x + 1, xmax, xmin, nx) - get_x_val(x, xmax, xmin, nx));
-			eg.d_eden[index][1] = (eg.eden[y_ind] - eg.eden[index]) / (get_y_val(y + 1, ymax, ymin, ny) - get_y_val(y, ymax, ymin, ny));
+			eg.d_eden[index].x = (eg.eden[x_inc] - eg.eden[index]) / (get_x_val(x + 1, xmax, xmin, nx) - get_x_val(x, xmax, xmin, nx));
+			eg.d_eden[index].y = (eg.eden[y_inc] - eg.eden[index]) / (get_y_val(y + 1, ymax, ymin, ny) - get_y_val(y, ymax, ymin, ny));
 		}
 	}
 

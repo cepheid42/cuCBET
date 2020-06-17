@@ -6,8 +6,8 @@
 #include "Egrid.cuh"
 
 void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
-	auto ix = get_x_index(r.orig.x(), xmax, xmin, nx);
-	auto iy = get_y_index(r.orig.y(), ymax, ymin, ny);
+	auto ix = get_x_index(r.orig.x, xmax, xmin, nx);
+	auto iy = get_y_index(r.orig.y, ymax, ymin, ny);
 
 	auto index = iy * nx + ix;
 
@@ -28,12 +28,10 @@ void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
 		if (ray_out_of_range(cur_p)) {
 			break;
 		}
-
 		r.append_path(cur_p, cur_v);
-
 		// Current cell coordinates
-		int x_pos = get_x_index(cur_p.x(), xmax, xmin, nx);
-		int y_pos = get_y_index(cur_p.y(), ymax, ymin, ny);
+		int x_pos = get_x_index(cur_p.x, xmax, xmin, nx);
+		int y_pos = get_y_index(cur_p.y, ymax, ymin, ny);
 
 		// Track cells that ray passes through
 		if (x_pos != ix || y_pos != iy) {
@@ -43,8 +41,8 @@ void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
 			present[index] += 1.0f;
 		}
 
-		float xp = (cur_p.x() - (get_x_val(x_pos, xmax, xmin, nx) - (dx / 2.0f))) / dx;
-		float yp = (cur_p.y() - (get_y_val(y_pos, ymax, ymin, ny) - (dy / 2.0f))) / dy;
+		float xp = (cur_p.x - (get_x_val(x_pos, xmax, xmin, nx) - (dx / 2.0f))) / dx;
+		float yp = (cur_p.y - (get_y_val(y_pos, ymax, ymin, ny) - (dy / 2.0f))) / dy;
 
 		float dl = std::abs(xp);
 		float dm = std::abs(yp);
@@ -118,11 +116,11 @@ void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step) {
 		if (b.id == 1) {
 			uray0 = uray_mult * phase_interp.findValue(x_start);
 		}
-
-		Ray *ray = new Ray(Point(x_start, y_start), b.dir, uray0);
+		Ray *ray;
+		checkErr(cudaMallocManaged(&ray, sizeof(Ray)));
+		ray->allocate(Point(x_start, y_start), b.dir, uray0);
 		b.rays[r] = *ray;
 		draw_init_path(b.rays[r], eg, b.edep, b.present);
-
 		if (b.id == 0) {
 			y_start += step;
 		}

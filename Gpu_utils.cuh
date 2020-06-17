@@ -12,21 +12,28 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 	}
 }
 
+#define cudaCheckError() {                                          \
+ cudaError_t e=cudaGetLastError();                                 \
+ if(e!=cudaSuccess) {                                              \
+   printf("Cuda failure %s:%d: '%s'\n",__FILE__,__LINE__,cudaGetErrorString(e));           \
+   exit(0); \
+ }                                                                 \
+}
 
 // Class for managing objects with CUDA Unified Memory
-class Managed {
-public:
-	void *operator new(size_t len) {
-		void *ptr;
-		checkErr(cudaMallocManaged(&ptr, len));
-		checkErr(cudaDeviceSynchronize());
-		return ptr;
-	}
-
-	void operator delete(void *ptr) {
-		checkErr(cudaDeviceSynchronize());
-		checkErr(cudaFree(ptr));
-	}
-};
+//class Managed {
+//public:
+//	void *operator new(size_t len) {
+//		void *ptr;
+//		checkErr(cudaMallocManaged(&ptr, len));
+//		checkErr(cudaDeviceSynchronize());
+//		return ptr;
+//	}
+//
+//	void operator delete(void *ptr) {
+//		checkErr(cudaDeviceSynchronize());
+//		checkErr(cudaFree(ptr));
+//	}
+//};
 
 #endif //CUCBET_GPU_UTILS_CUH

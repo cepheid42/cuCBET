@@ -83,7 +83,7 @@ def plot_rays(b1, b2):
             x2, y2 = zip(*r2)
             plt.plot(x2, y2, 'c')
 
-    plt.show(block=True)
+    plt.show(block=False)
 
 
 def plot_intensity(e_b1, e_b2):
@@ -96,15 +96,20 @@ def plot_intensity(e_b1, e_b2):
     else:
         return
 
+    edep_min = np.min(combined_edep)
+    edep_max = np.max(combined_edep)
+    norm_edep = (combined_edep - edep_min) / (edep_max - edep_min)
+
     plt.figure()
-    clo = 0.0
-    chi = np.max(combined_edep)
-    plt.pcolormesh(x, y, combined_edep, cmap=cmap, vmin=clo, vmax=chi)
+    # clo = 0.0
+    # chi = np.max(combined_edep)
+    # plt.pcolormesh(x, y, combined_edep, cmap=cmap, vmin=clo, vmax=chi)
+    plt.pcolormesh(x, y, norm_edep, cmap=cmap)
     plt.colorbar()
     plt.xlabel('X (cm)')
     plt.ylabel('Y (cm)')
     plt.title('Overlapped intensity')
-    plt.show(block=True)
+    plt.show(block=False)
 
 
 def plot_var1(e_b1, e_b2):
@@ -112,8 +117,15 @@ def plot_var1(e_b1, e_b2):
         var1 = 8.053e-10 * np.sqrt(e_b1 + e_b2 + 1.0e-10) * (1.053 / 3.0)
     else:
         return
+
+    vmin = np.min(var1)
+    vmax = np.max(var1)
+    norm_var1 = (var1 - vmin) / (vmax - vmin)
+
     plt.figure()
-    plt.pcolormesh(x, y, var1, cmap=cmap, vmin=np.min(var1), vmax=np.max(var1))
+    # plt.pcolormesh(x, y, var1, cmap=cmap, vmin=np.min(var1), vmax=np.max(var1))
+    plt.pcolormesh(x, y, norm_var1, cmap=cmap)
+
     plt.colorbar()
     plt.xlabel('X (cm)')
     plt.ylabel('Y (cm)')
@@ -129,8 +141,14 @@ def plot_a0(e_b1_new, e_b2_new):
     else:
         return
 
+    amin = np.min(a0)
+    amax = np.max(a0)
+    norm_a0 = (a0 - amin) / (amax - amin)
+
     plt.figure()
-    plt.pcolormesh(x, y, a0, cmap=cmap, vmin=np.min(a0), vmax=np.max(a0))
+    # plt.pcolormesh(x, y, a0, cmap=cmap, vmin=np.min(a0), vmax=np.max(a0))
+    plt.pcolormesh(x, y, norm_a0, cmap=cmap)
+
     plt.colorbar()
     plt.xlabel('X (cm)')
     plt.ylabel('Y (cm)')

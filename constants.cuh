@@ -41,7 +41,7 @@ const float omega = 2.0f * pi * freq;
 const float courant_mult = 0.2f;
 const float intensity = 2.0e15f;
 
-const int nrays = 10; //static_cast<int>(float(rays_per_zone) * (beam_max - beam_min) / dy);
+const int nrays = int(5 * (beam_max - beam_min) / dy);
 
 const float uray_mult = intensity * courant_mult;
 

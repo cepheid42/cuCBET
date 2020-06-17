@@ -3,36 +3,33 @@
 
 #include "vec2.cuh"
 
-class Ray: public Managed {
+struct Intersection {
+	int r1_num;
+	int r1_ind;
+	int r2_num;
+	int r2_ind;
+};
+
+class Ray {
 public:
-	Ray() : Ray(Point(0.0f, 0.0f), Vec(0.0f, 0.0f), 0.0f) {}
-
-	Ray(const Point& orig, const Vec& dir, float power): orig(orig), dir(dir), power(power) {
-		checkErr(cudaMallocManaged(&path,             nt * sizeof(Point)));
-		checkErr(cudaMallocManaged(&group_v,          nt * sizeof(Vec)));
-		checkErr(cudaMallocManaged(&intersections, nrays * sizeof(int)));
-		checkErr(cudaDeviceSynchronize());
-	}
-
 	~Ray() {
-		checkErr(cudaDeviceSynchronize());
+		checkErr(cudaDeviceSynchronize())
 		checkErr(cudaFree(path))
 		checkErr(cudaFree(group_v))
-		checkErr(cudaFree(intersections));
+		checkErr(cudaFree(intersections))
 	}
 
-	Ray& operator=(const Ray* r) {
-		if (this != r) {
-			orig = r->orig;
-			dir = r->dir;
-			power = r->power;
-			endex = r->endex;
+	void allocate(const Point& origin, const Vec& ndir, float uray0) {
+		orig = origin;
+		dir = ndir;
+		power = uray0;
+		endex = 0;
+		int_index = 0;
 
-			path = r->path;
-			group_v = r->group_v;
-			intersections = r->intersections;
-		}
-		return *this;
+		checkErr(cudaMallocManaged(&path,          nt    * sizeof(Point)))
+		checkErr(cudaMallocManaged(&group_v,       nt    * sizeof(Vec)))
+		checkErr(cudaMallocManaged(&intersections, nrays * sizeof(Intersection)))
+		checkErr(cudaDeviceSynchronize());
 	}
 
 	void append_path(Point& p, Vec& v) {
@@ -41,20 +38,28 @@ public:
 		endex++;
 	}
 
+	__device__ void add_intersection(int ray1_num, int ray1_ind, int ray2_num, int ray2_ind) const {
+		intersections[ray2_num].r1_num = ray1_num;
+		intersections[ray2_num].r1_ind = ray1_ind;
+		intersections[ray2_num].r2_num = ray2_num;
+		intersections[ray2_num].r2_ind = ray2_ind;
+	}
+
 public:
 	Point orig;
 	Vec dir;
 	float power;
-	int endex = 0;
+	int endex;
+	int int_index;
 
-	Point* path;
-	Vec* group_v;
-	int* intersections;
+	Point* path{};
+	Vec* group_v{};
+	Intersection* intersections{};
 };
 
 // Utility Functions
 inline bool ray_out_of_range(Point& p) {
-	return (p.x() < xmin || p.x() > xmax || p.y() < ymin || p.y() > ymax);
+	return (p.x < xmin || p.x > xmax || p.y < ymin || p.y > ymax);
 }
 
 #endif //CUCBET_RAY_CUH

@@ -12,7 +12,7 @@
 #include <vector>
 #include "Gpu_utils.cuh"
 
-class Interpolator: Managed {
+class Interpolator {
 public:
 	//On construction, we take in a vector of data point pairs
 	//that represent the line we will use to interpolate
