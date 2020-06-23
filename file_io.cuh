@@ -7,47 +7,57 @@
 // Utility Functions
 void save_beam_to_file(const Beam& beam, const std::string& beam_name) {
 	const std::string output_path = "./Outputs/" + beam_name;
+//
+//	// Write beam to file
+//	std::ofstream beam_file(output_path + ".csv");
+//	beam_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//
+//	for (int r = 0; r < nrays; r++) {
+//		for (int t = 0; t < beam.rays[r].endex; t++) {
+//			beam_file << r << ", " << beam.rays[r].path[t] << "\n";
+//		}
+//	}
+//	beam_file.close();
+//
+//	// Write beam edep to file (i_b#)
+//	std::ofstream edep_file(output_path + "_edep.csv");
+//	edep_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//	for (int y = ny - 1; y >= 0; y--) {
+//		for (int x = 0; x < nx; x++) {
+//			int index = y * nx + x;
+//			edep_file << beam.edep[index];
+//			if (x != nx - 1) {
+//				edep_file << ", ";
+//			}
+//		}
+//		edep_file << "\n";
+//	}
+//	edep_file.close();
+//
+//	// Write beam edep_new to file (i_b#_new)
+//	std::ofstream edep_new_file(output_path + "_edep_new.csv");
+//	edep_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
+//	for (int y = ny - 1; y >= 0; y--) {
+//		for (int x = 0; x < nx; x++) {
+//			int index = y * nx + x;
+//			edep_new_file << beam.edep[index];
+//			if (x != nx - 1) {
+//				edep_new_file << ", ";
+//			}
+//		}
+//		edep_new_file << "\n";
+//	}
+//	edep_new_file.close();
 
-	// Write beam to file
-	std::ofstream beam_file(output_path + ".csv");
-	beam_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-
+	// Write intersections to file (b#_intersections)
+	std::ofstream inter_file(output_path + "_intersections.csv");
+	inter_file << std::setprecision(std::numeric_limits<float>::max_digits10);
 	for (int r = 0; r < nrays; r++) {
-		for (int t = 0; t < beam.rays[r].endex; t++) {
-			beam_file << r << ", " << beam.rays[r].path[t] << "\n";
+		for (int t = 0; t < nrays; t++) {
+			inter_file << beam.rays[r].intersections[t] << '\n';
 		}
 	}
-	beam_file.close();
-
-	// Write beam edep to file (i_b#)
-	std::ofstream edep_file(output_path + "_edep.csv");
-	edep_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-	for (int y = ny - 1; y >= 0; y--) {
-		for (int x = 0; x < nx; x++) {
-			int index = y * nx + x;
-			edep_file << beam.edep[index];
-			if (x != nx - 1) {
-				edep_file << ", ";
-			}
-		}
-		edep_file << "\n";
-	}
-	edep_file.close();
-
-	// Write beam edep_new to file (i_b#_new)
-	std::ofstream edep_new_file(output_path + "_edep_new.csv");
-	edep_new_file << std::setprecision(std::numeric_limits<float>::max_digits10);
-	for (int y = ny - 1; y >= 0; y--) {
-		for (int x = 0; x < nx; x++) {
-			int index = y * nx + x;
-			edep_new_file << beam.edep[index];
-			if (x != nx - 1) {
-				edep_new_file << ", ";
-			}
-		}
-		edep_new_file << "\n";
-	}
-	edep_new_file.close();
+	inter_file.close();
 }
 
 void save_egrid_to_files(Egrid& eg) {
@@ -68,4 +78,5 @@ void save_egrid_to_files(Egrid& eg) {
 	}
 	eden_file.close();
 }
+
 #endif //CUCBET_FILE_IO_CUH

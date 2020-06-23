@@ -3,7 +3,7 @@
 #include "Initializers.cuh"
 #include "Intersections.cuh"
 #include "file_io.cuh"
-#include "Calculations.cuh"
+//#include "Calculations.cuh"
 
 using namespace std;
 
@@ -73,12 +73,12 @@ int main() {
 	// Calculate gain
 	auto gain_start = steady_clock::now();
 	cout << "Calculating Gain (GPU)." << endl;
-	gpu_calc_gain(*beam1, *beam2, *eg);
+//	gpu_calc_gain(*beam1, *beam2, *eg);
 
 	// Calculate intensity
 	auto intensity_start = steady_clock::now();
 //	calc_intensity(b1, b2, egrid, pm);
-//
+
 	auto io_start = steady_clock::now();
 	cout << "Writing files." << endl;
 	save_beam_to_file(*beam1, "beam1");
@@ -110,7 +110,7 @@ int main() {
 	<< setw(25) << left	<< "Gain time: "         << fixed << setprecision(5) << left << gain_time.count()      << "s\n"
 	<< setw(25) << left	<< "Intensity time: "    << fixed << setprecision(5) << left << intensity_time.count() << "s\n"
 	<< setw(25) << left	<< "File Write time: "   << fixed << setprecision(5) << left << io_time.count()        << "s\n"
-	<< "====================================="   << endl
+	<< "====================================="   << '\n'
 	<< setw(25) << left	<< "Total time: "        << fixed << setprecision(5) << left << total_time.count()     << "s" << endl;
 	return 0;
 }

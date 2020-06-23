@@ -116,11 +116,13 @@ void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step) {
 		if (b.id == 1) {
 			uray0 = uray_mult * phase_interp.findValue(x_start);
 		}
+
 		Ray *ray;
 		checkErr(cudaMallocManaged(&ray, sizeof(Ray)));
 		ray->allocate(Point(x_start, y_start), b.dir, uray0);
 		b.rays[r] = *ray;
 		draw_init_path(b.rays[r], eg, b.edep, b.present);
+
 		if (b.id == 0) {
 			y_start += step;
 		}
