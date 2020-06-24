@@ -59,7 +59,7 @@ void gpu_calc_gain(Beam& b1, Beam& b2, Egrid& eg) {
 
 	const float const1 = std::pow(estat, 2.0f) / (4.0f * (1.0e3f * m_e) * c * omega * kb * Te * (1.0f + 3.0f * Ti / (Z * Te)));
 	const float cs = 100.0f * std::sqrt(e_c * (Z * Te_eV + 3.0f * Ti_eV) / mi_kg);
-
+	const float ncrit = 1e-6f * (std::pow(omega, 2.0f) * m_e * e_0 / std::pow(e_c, 2.0f));
 	// Make this a kernel launching kernels?
 	for (int r = 0; r < nrays; r++) {
 		for (int p = 0; p < nrays; p++) {

@@ -88,14 +88,14 @@ def plot_rays(b1, b2, x_ints, y_ints):
     if b1:
         for r1 in b1:
             x1, y1 = zip(*r1)
-            plt.plot(x1, y1, 'm.')
+            plt.plot(x1, y1, 'm')
 
     if b2:
         for r2 in b2:
             x2, y2 = zip(*r2)
-            plt.plot(x2, y2, 'c.')
+            plt.plot(x2, y2, 'c')
 
-    plt.plot(x_ints, y_ints, 'ro')
+    # plt.plot(x_ints, y_ints, 'b*')
 
     plt.show(block=True)
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     beam1 = import_beam(output_path + 'beam1.csv')
     beam2 = import_beam(output_path + 'beam2.csv')
     eden = np.genfromtxt(output_path + 'eden.csv', delimiter=',', dtype=np.float32)
-    ixs, iys = import_intersections(output_path + "beam1_intersections.csv")
+    ixs, iys = [], [] # import_intersections(output_path + "beam1_intersections.csv")
 
     try:
         i_b1 = np.genfromtxt(output_path + 'beam1_edep.csv', delimiter=',', dtype=np.float32)

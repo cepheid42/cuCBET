@@ -7,12 +7,13 @@ class vec2 {
 public:
 	__hd__ vec2() : x(0), y(0) {}
 	__hd__ vec2(float e0, float e1) : x(e0), y(e1) {}
-	vec2(const vec2& v) = default;
+
+//	__hd__ vec2
 
 	__hd__ float getx() const { return x; }
 	__hd__ float gety() const { return y; }
 
-	__hd__ vec2 operator-() const { return vec2(-x, -y); }
+	__hd__ vec2 operator-() const { return {-x, -y}; }
 
 	__hd__ vec2& operator*=(const float t) {
 		x *= t;
@@ -51,19 +52,19 @@ inline std::ostream& operator<<(std::ostream &out, const vec2 &v) {
 }
 
 __hd__ inline vec2 operator+(const vec2 &u, const vec2 &v) {
-	return vec2(u.x + v.x, u.y + v.y);
+	return {u.x + v.x, u.y + v.y};
 }
 
 __hd__ inline vec2 operator-(const vec2 &u, const vec2 &v) {
-	return vec2(u.x - v.x, u.y - v.y);
+	return {u.x - v.x, u.y - v.y};
 }
 
 __hd__ inline vec2 operator*(const vec2 &u, const vec2 &v) {
-	return vec2(u.x * v.x, u.y * v.y);
+	return {u.x * v.x, u.y * v.y};
 }
 
 __hd__ inline vec2 operator*(float t, const vec2 &v) {
-	return vec2(t*v.x, t*v.y);
+	return {t*v.x, t*v.y};
 }
 
 __hd__ inline vec2 operator*(const vec2& v, float t) {

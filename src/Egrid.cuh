@@ -57,6 +57,7 @@ void init_eden_derivs(Egrid& eg) {
 }
 
 void init_egrid(Egrid& eg) {
+	const float ncrit = 1e-6f * (std::pow(omega, 2.0f) * m_e * e_0 / std::pow(e_c, 2.0f));
 	for (int y = 0; y < ny; y++) {
 		for (int x = 0; x < nx; x++) {
 			int index = y * nx + x;

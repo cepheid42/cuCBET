@@ -2,7 +2,7 @@
 #define CUCBET_INTERPOLATOR_CUH
 
 /*
- * This code is borrowed *without* explicit permission from
+ * This code is borrowed from
  * https://bulldozer00.blog/2016/05/10/linear-interpolation-in-c/
  */
 
@@ -10,7 +10,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include "Gpu_utils.cuh"
 
 class Interpolator {
 public:

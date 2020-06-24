@@ -8,8 +8,13 @@
 #include <iomanip>
 #include <cassert>
 #include <limits>
+#include <chrono>
+
+using std::chrono::steady_clock;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+
 #include "Gpu_utils.cuh"
-#include "Interpolator.cuh"
 
 // Usings
 
@@ -41,7 +46,7 @@ const float omega = 2.0f * pi * freq;
 const float courant_mult = 0.2f;
 const float intensity = 2.0e15f;
 
-const int nrays = 20; //int(5 * (beam_max - beam_min) / dy);
+const int nrays = 50; //int(5 * (beam_max - beam_min) / dy);
 
 const float uray_mult = intensity * courant_mult;
 
@@ -55,10 +60,6 @@ const float Ti_eV = 1.0e3f;
 const float iaw = 0.2f;                     // ion-acoustic wave energy-damping rate (nu_ia/omega_s)!!
 const float kb = 1.3806485279e-16f;         // Boltzmann constant in erg/K
 
-
-const float ncrit = 1e-6f * (std::pow(omega, 2.0f) * m_e * e_0 / std::pow(e_c, 2.0f));
-const float dt = courant_mult * std::min(dx, dy) / c;
-const int nt = int(2.0f * std::max(nx, ny) / courant_mult);
 
 // Utility Functions
 __host__ __device__ inline float get_x_val(int i, float max, float min, int N) {
@@ -76,5 +77,21 @@ __host__ __device__ inline int get_x_index(float x, float max, float min, int N)
 __host__ __device__ inline int get_y_index(float y, float max, float min, int N) {
 	return int(floorf(float(N - 1) * (y - max) / (min - max)));
 }
+
+struct timer {
+	steady_clock::time_point start_time{};
+	steady_clock::time_point end_time{};
+
+	float elapsed = 0.0f;
+
+	inline void start() {
+		start_time = steady_clock::now();
+	}
+
+	inline void stop() {
+		end_time = steady_clock::now();
+		elapsed += duration_cast<duration<float>>(end_time - start_time).count();
+	}
+};
 
 #endif //CUCBET_CONSTANTS_CUH

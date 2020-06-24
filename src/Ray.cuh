@@ -1,20 +1,67 @@
-#ifndef CUCBET_INITIALIZERS_CUH
-#define CUCBET_INITIALIZERS_CUH
+#ifndef CUCBET_RAY_CUH
+#define CUCBET_RAY_CUH
 
-#include "constants.cuh"
-#include "Beam.cuh"
+#include "vec2.cuh"
 #include "Egrid.cuh"
 
-void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
+class Ray {
+public:
+	Ray() : orig(), dir(), power(0.0f), endex(0), path(nullptr), group_v(nullptr), intersections(nullptr) {}
+	~Ray() = default;
+
+	void allocate(const float x_start, const float y_start, const Vec& ndir, float uray0, int nt) {
+		orig.x = x_start;
+		orig.y = y_start;
+		dir = ndir;
+		power = uray0;
+		endex = 0;
+
+		checkErr(cudaMallocManaged(&path,          nt    * sizeof(Point)))
+		checkErr(cudaMallocManaged(&group_v,       nt    * sizeof(Vec)))
+		checkErr(cudaMallocManaged(&intersections, nrays * sizeof(Point)))
+		checkErr(cudaDeviceSynchronize())
+	}
+
+	void free() const {
+		checkErr(cudaDeviceSynchronize())
+		checkErr(cudaFree(path))
+		checkErr(cudaFree(group_v))
+		checkErr(cudaFree(intersections))
+	}
+
+	void append_path(Point& p, Vec& v) {
+		path[endex] = p;
+		group_v[endex] = v;
+		endex++;
+	}
+
+public:
+	Point orig;
+	Vec dir;
+	float power;
+	int endex;
+
+	Point* path;
+	Vec* group_v;
+	Point* intersections;
+};
+
+// Utility Functions
+inline bool ray_out_of_range(Point& p) {
+	return (p.x < xmin - (dx / 2.0f) || p.x > xmax - (dx / 2.0f) || p.y < ymin - (dy / 2) || p.y > ymax - (dy / 2));
+}
+
+void draw_init_path(Ray& r, Egrid& eg, float* edep, const int nt) {
 	auto ix = get_x_index(r.orig.x, xmax, xmin, nx);
 	auto iy = get_y_index(r.orig.y, ymax, ymin, ny);
 
 	auto index = iy * nx + ix;
 
-	present[index] += 1.0f;
+	const float ncrit = 1e-6f * (std::pow(omega, 2.0f) * m_e * e_0 / std::pow(e_c, 2.0f));
+	const float dt = courant_mult * std::min(dx, dy) / c;
 
-	float wpe = std::sqrt(eg.eden[index] * 1.0e6f * std::pow(e_c, 2.0f) / (m_e * e_0));
-	float k = std::sqrt((std::pow(omega, 2.0f) - std::pow(wpe, 2.0f)) / std::pow(c, 2.0f));
+	const float wpe = std::sqrt(eg.eden[index] * 1.0e6f * std::pow(e_c, 2.0f) / (m_e * e_0));
+	const float k = std::sqrt((std::pow(omega, 2.0f) - std::pow(wpe, 2.0f)) / std::pow(c, 2.0f));
 
 	Vec k1 = k * unit_vector(r.dir);
 	Vec v1 = (k1 * std::pow(c, 2.0f)) / omega;
@@ -28,7 +75,9 @@ void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
 		if (ray_out_of_range(cur_p)) {
 			break;
 		}
+
 		r.append_path(cur_p, cur_v);
+
 		// Current cell coordinates
 		int x_pos = get_x_index(cur_p.x, xmax, xmin, nx);
 		int y_pos = get_y_index(cur_p.y, ymax, ymin, ny);
@@ -38,7 +87,6 @@ void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
 			ix = x_pos;
 			iy = y_pos;
 			index = iy * nx + ix;
-			present[index] += 1.0f;
 		}
 
 		float xp = (cur_p.x - (get_x_val(x_pos, xmax, xmin, nx) - (dx / 2.0f))) / dx;
@@ -104,31 +152,4 @@ void draw_init_path(Ray& r, Egrid& eg, float* edep, float* present) {
 	}
 }
 
-
-void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step) {
-	Interpolator phase_interp = phase_interpolator(nrays, beam_max, beam_min);
-	// Iterate over rays
-	for (int r = 0; r < nrays; r++) {
-		float uray0;
-		if (b.id == 0) {
-			uray0 = uray_mult * phase_interp.findValue(y_start);
-		}
-		if (b.id == 1) {
-			uray0 = uray_mult * phase_interp.findValue(x_start);
-		}
-
-		Ray *ray;
-		checkErr(cudaMallocManaged(&ray, sizeof(Ray)));
-		ray->allocate(Point(x_start, y_start), b.dir, uray0);
-		b.rays[r] = *ray;
-		draw_init_path(b.rays[r], eg, b.edep, b.present);
-
-		if (b.id == 0) {
-			y_start += step;
-		}
-		if (b.id == 1){
-			x_start += step;
-		}
-	}
-}
-#endif //CUCBET_INITIALIZERS_CUH
+#endif //CUCBET_RAY_CUH
