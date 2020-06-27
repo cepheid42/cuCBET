@@ -6,28 +6,27 @@
 
 class Beam {
 public:
-	Beam() : id(-1), dir(), rays(nullptr), edep(nullptr), edep_new(nullptr) {}
+	Beam() : rays(nullptr), edep(nullptr), edep_new(nullptr), id(-1), dir() {}
+	Beam(Beam&) = delete;
 	~Beam() = default;
+
+	Beam& operator=(Beam&) = delete;
 
 	void allocate(const int beam_id, const float x_dir, const float y_dir) {
 		id = beam_id;
 		dir.x = x_dir;
 		dir.y = y_dir;
 
-		int big = (nx + 2) * (ny + 2);
-//		int lit = nx * ny;
-
-		checkErr(cudaMallocManaged(&rays,     nrays * sizeof(Ray)))
-		checkErr(cudaMallocManaged(&edep,     big   * sizeof(float)))
-		checkErr(cudaMallocManaged(&edep_new, big   * sizeof(float)))
-
+		checkErr(cudaMallocManaged(&rays, nrays * sizeof(Ray)))
+		checkErr(cudaMallocManaged(&edep, (nx + 2) * (ny + 2) * sizeof(float)))
+		checkErr(cudaMallocManaged(&edep_new, (nx + 2) * (ny + 2) * sizeof(float)))
 		checkErr(cudaDeviceSynchronize())
 	}
 
-	void free() const {
+	void free_mem() const {
 		checkErr(cudaDeviceSynchronize())
 		for(int i = 0; i < nrays; i++) {
-			rays[i].free();
+			rays[i].free_mem();
 		}
 		checkErr(cudaFree(rays))
 		checkErr(cudaFree(edep))
@@ -35,37 +34,28 @@ public:
 	}
 	
 public:
-	int id;
-	Vec dir;
-
 	Ray* rays;
 	float* edep;  // nx + 2
 	float* edep_new; // nx + 2
+	int id;
+	Vec dir;
 };
 
 void init_beam(Beam& b, Egrid& eg, float x_start, float y_start, float step) {
-	Interpolator phase_interp = phase_interpolator(nrays, beam_max, beam_min);
-
+	Interpolator interp = new_interpolator();
 	const int nt = int(2.0f * std::max(nx, ny) / courant_mult);
 
 	// Iterate over rays
 	for (int r = 0; r < nrays; r++) {
 		float uray0;
 		if (b.id == 0) {
-			uray0 = uray_mult * phase_interp.findValue(y_start);
+			uray0 = uray_mult * interp.findValue(y_start);
 		}
 		if (b.id == 1) {
-			uray0 = uray_mult * phase_interp.findValue(x_start);
+			uray0 = uray_mult * interp.findValue(x_start);
 		}
 
-//		Ray *ray;
-//		checkErr(cudaMallocManaged(&ray, sizeof(Ray)))
-//		ray->allocate(x_start, y_start, b.dir, uray0, nt);
-//
-//		b.rays[r] = *ray;
-
 		b.rays[r].allocate(x_start, y_start, b.dir, uray0, nt);
-
 		draw_init_path(b.rays[r], eg, b.edep, nt);
 
 		if (b.id == 0) {

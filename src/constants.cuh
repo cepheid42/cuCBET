@@ -14,8 +14,6 @@ using std::chrono::steady_clock;
 using std::chrono::duration_cast;
 using std::chrono::duration;
 
-#include "Gpu_utils.cuh"
-
 // Usings
 
 // Constant Values
@@ -46,7 +44,7 @@ const float omega = 2.0f * pi * freq;
 const float courant_mult = 0.2f;
 const float intensity = 2.0e15f;
 
-const int nrays = 50; //int(5 * (beam_max - beam_min) / dy);
+const int nrays = 1; //int(5 * (beam_max - beam_min) / dy);
 
 const float uray_mult = intensity * courant_mult;
 
@@ -62,6 +60,15 @@ const float kb = 1.3806485279e-16f;         // Boltzmann constant in erg/K
 
 
 // Utility Functions
+
+#define checkErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true) {
+	if (code != cudaSuccess) {
+		fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) exit(code);
+	}
+}
+
 __host__ __device__ inline float get_x_val(int i, float max, float min, int N) {
 	return min + (float(i) * (max - min) / float(N - 1));
 }

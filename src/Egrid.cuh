@@ -5,27 +5,33 @@
 
 class Egrid {
 public:
-	~Egrid() {
-		checkErr(cudaDeviceSynchronize());
-		checkErr(cudaFree(eden));
-		checkErr(cudaFree(d_eden));
-		checkErr(cudaFree(W));
-		checkErr(cudaFree(W_new));
-	}
+	Egrid() : eden(nullptr), d_eden(nullptr), W(nullptr), W_new(nullptr) {}
+	~Egrid() = default;
+
+	Egrid(Egrid&) = delete;
+	Egrid& operator=(Egrid&) = delete;
 
 	void allocate() {
-		checkErr(cudaMallocManaged(&eden,   nx * ny * sizeof(float)));
-		checkErr(cudaMallocManaged(&d_eden, nx * ny * sizeof(Point)))
-		checkErr(cudaMallocManaged(&W,      nx * ny * sizeof(Point)))
-		checkErr(cudaMallocManaged(&W_new,  nx * ny * sizeof(Point)))
-		checkErr(cudaDeviceSynchronize());
+		cudaMallocManaged(&eden,   nx * ny * sizeof(float));
+		cudaMallocManaged(&d_eden, nx * ny * sizeof(Point));
+		cudaMallocManaged(&W,      nx * ny * sizeof(Point));
+		cudaMallocManaged(&W_new,  nx * ny * sizeof(Point));
+		cudaDeviceSynchronize();
+	}
+
+	void free_mem() const {
+		checkErr(cudaDeviceSynchronize())
+		checkErr(cudaFree(eden))
+		checkErr(cudaFree(d_eden))
+		checkErr(cudaFree(W))
+		checkErr(cudaFree(W_new))
 	}
 
 public:
-	float* eden{};
-	Point* d_eden{};
-	Point* W{};
-	Point* W_new{};
+	float* eden;
+	Point* d_eden;
+	Point* W;
+	Point* W_new;
 };
 
 void init_eden_derivs(Egrid& eg) {
@@ -66,8 +72,11 @@ void init_egrid(Egrid& eg) {
 			eg.eden[index] = std::max(density, 0.0f);
 
 			float w = std::sqrt(1.0f - eg.eden[index] / ncrit); // / float(rays_per_zone);
-			eg.W[index] = Point(w, w);
-			eg.W_new[index] = Point(w, w);
+
+			eg.W[index].x = w;
+			eg.W[index].y = w;
+			eg.W_new[index].x = w;
+			eg.W_new[index].y = w;
 		}
 	}
 	init_eden_derivs(eg);

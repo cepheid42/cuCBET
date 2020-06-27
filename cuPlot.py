@@ -54,14 +54,14 @@ def import_intersections(filename):
     y_ints = []
     try:
         inters = np.genfromtxt(filename, delimiter=',', dtype=np.float32)
-        x_ints, y_ints = zip(*inters)
+        # x_ints, y_ints = zip(*inters)
+        x_ints, y_ints = inters
     except:
-        return []
+        return [], []
 
     return x_ints, y_ints
 
-
-def plot_rays(b1, b2, x_ints, y_ints):
+def plot_rays(b1, b2, x1_ints, y1_ints):
     plt.figure()
     plt.pcolormesh(x, y, eden / ncrit, cmap=cmap)
     plt.plot(x - (dx / 2), y - (dy / 2), 'k--')
@@ -95,7 +95,7 @@ def plot_rays(b1, b2, x_ints, y_ints):
             x2, y2 = zip(*r2)
             plt.plot(x2, y2, 'c')
 
-    # plt.plot(x_ints, y_ints, 'b*')
+    plt.plot(x1_ints, y1_ints, 'bo')
 
     plt.show(block=True)
 
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     beam1 = import_beam(output_path + 'beam1.csv')
     beam2 = import_beam(output_path + 'beam2.csv')
     eden = np.genfromtxt(output_path + 'eden.csv', delimiter=',', dtype=np.float32)
-    ixs, iys = [], [] # import_intersections(output_path + "beam1_intersections.csv")
+    ix1, iy1 = import_intersections(output_path + "beam1_intersections.csv")
 
     try:
         i_b1 = np.genfromtxt(output_path + 'beam1_edep.csv', delimiter=',', dtype=np.float32)
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     except:
         i_b2_new = np.zeros((nx, ny))
 
-    plot_rays(beam1, beam2, ixs, iys)
-    plot_intensity(i_b1, i_b2)
-    plot_var1(i_b1, i_b2)
-    plot_a0(i_b1_new, i_b2_new)
+    plot_rays(beam1, beam2, ix1, iy1)
+    # plot_intensity(i_b1, i_b2)
+    # plot_var1(i_b1, i_b2)
+    # plot_a0(i_b1_new, i_b2_new)

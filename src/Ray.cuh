@@ -6,10 +6,13 @@
 
 class Ray {
 public:
-	Ray() : orig(), dir(), power(0.0f), endex(0), path(nullptr), group_v(nullptr), intersections(nullptr) {}
+	Ray() : path(nullptr), group_v(nullptr), intersections(nullptr), endex(0), power(0.0f), orig(), dir() {}
+	Ray(Ray&) = delete;
 	~Ray() = default;
 
-	void allocate(const float x_start, const float y_start, const Vec& ndir, float uray0, int nt) {
+	Ray& operator=(Ray&) = delete;
+
+	void allocate(const float x_start, const float y_start, const Vec& ndir, const float uray0, const int nt) {
 		orig.x = x_start;
 		orig.y = y_start;
 		dir = ndir;
@@ -22,7 +25,7 @@ public:
 		checkErr(cudaDeviceSynchronize())
 	}
 
-	void free() const {
+	void free_mem() const {
 		checkErr(cudaDeviceSynchronize())
 		checkErr(cudaFree(path))
 		checkErr(cudaFree(group_v))
@@ -36,14 +39,14 @@ public:
 	}
 
 public:
-	Point orig;
-	Vec dir;
-	float power;
-	int endex;
-
 	Point* path;
 	Vec* group_v;
 	Point* intersections;
+
+	int endex;
+	float power;
+	Point orig;
+	Vec dir;
 };
 
 // Utility Functions

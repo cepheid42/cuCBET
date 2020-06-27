@@ -78,12 +78,17 @@ private:
 };
 
 
-Interpolator phase_interpolator(int nrays, float beam_max, float beam_min) {
+Interpolator new_interpolator() {
 	const float sigma = 1.7e-4f;
 	std::vector<std::pair<float, float>> phase_power;
 
 	for (int i = 0; i < nrays; i++) {
-		auto phase = beam_min + (float(i) * (beam_max - beam_min) / float(nrays - 1));
+		float phase = beam_min;
+
+		if (nrays != 1) {
+			phase = beam_min + (float(i) * (beam_max - beam_min) / float(nrays - 1));
+		}
+
 		auto power = std::exp(-1.0f * std::pow(std::pow(phase / sigma, 2.0f), 2.0f));
 
 		phase_power.emplace_back(std::pair<float, float>(phase, power));
