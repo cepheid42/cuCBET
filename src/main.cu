@@ -38,9 +38,9 @@ int main() {
 
 	Beam *beam1;
 	checkErr(cudaMallocManaged(&beam1, sizeof(Beam)))
-	beam1->allocate(0, 1.0f, -0.1f);
+	beam1->allocate(0, 1.0f, 0.0f);
 	float b1_x_start = xmin;
-	float b1_y_start = beam_min - (dx / 2.0f);
+	float b1_y_start = beam_min - (dy / 2);
 	float b1_step = (beam_max - beam_min) / float(nrays - 1);
 	init_beam(*beam1, *eg, b1_x_start, b1_y_start, b1_step);
 	beam1_timer.stop();
@@ -52,8 +52,8 @@ int main() {
 	Beam *beam2;
 	checkErr(cudaMallocManaged(&beam2, sizeof(Beam)))
 	beam2->allocate(1, 0.0f, 1.0f);
-	float b2_x_start = beam_min - (dy / 2.0f);
-	float b2_y_start = ymin;
+	float b2_x_start = beam_min;
+	float b2_y_start = ymin - (dx / 2);
 	float b2_step = (beam_max - beam_min) / float(nrays - 1);
 	init_beam(*beam2, *eg, b2_x_start, b2_y_start, b2_step);
 	beam2_timer.stop();

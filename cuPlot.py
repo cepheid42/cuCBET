@@ -61,20 +61,21 @@ def import_intersections(filename):
 
     return x_ints, y_ints
 
+
 def plot_rays(b1, b2, x1_ints, y1_ints):
     plt.figure()
     plt.pcolormesh(x, y, eden / ncrit, cmap=cmap)
-    plt.plot(x - (dx / 2), y - (dy / 2), 'k--')
-    plt.plot(y - (dy / 2), x - (dx / 2), 'k--')
+    plt.plot(x - (dx / 2), y - (dy / 2), 'k:')
+    plt.plot(y - (dy / 2), x - (dx / 2), 'k:')
 
-    plt.plot(x - (dx / 2), y + (dy / 2), 'k--')
-    plt.plot(y + (dy / 2), x - (dx / 2), 'k--')
+    plt.plot(x - (dx / 2), y + (dy / 2), 'k:')
+    plt.plot(y + (dy / 2), x - (dx / 2), 'k:')
 
-    plt.plot(x + (dx / 2), y - (dy / 2), 'k--')
-    plt.plot(y - (dy / 2), x + (dx / 2), 'k--')
+    plt.plot(x + (dx / 2), y - (dy / 2), 'k:')
+    plt.plot(y - (dy / 2), x + (dx / 2), 'k:')
 
-    plt.plot(x + (dx / 2), y + (dy / 2), 'k--')
-    plt.plot(y + (dy / 2), x + (dx / 2), 'k--')
+    plt.plot(x + (dx / 2), y + (dy / 2), 'k:')
+    plt.plot(y + (dy / 2), x + (dx / 2), 'k:')
 
     plt.plot(x, y, 'k--')
     plt.plot(y, x, 'k--')
@@ -88,12 +89,12 @@ def plot_rays(b1, b2, x1_ints, y1_ints):
     if b1:
         for r1 in b1:
             x1, y1 = zip(*r1)
-            plt.plot(x1, y1, 'm')
+            plt.plot(x1, y1, 'm.')
 
     if b2:
         for r2 in b2:
             x2, y2 = zip(*r2)
-            plt.plot(x2, y2, 'c')
+            plt.plot(x2, y2, 'c.')
 
     plt.plot(x1_ints, y1_ints, 'bo')
 
