@@ -3,13 +3,18 @@ Cross Beam Energy Transfer using C++/CUDA
 
 ### Dependencies
 - C++14
-- <del>CUDA 10.2</del> Not implemented
+- CUDA 10.2+
 
 ### Usage
-Currently the code does not use CUDA despite being .cu/.cuh files. Renaming the files to .cpp/.hpp and compiling with any C++ compiler should work.
+To compile use the command
 
-> g++ main.cpp
+> nvcc -arch={your_architecture} src/main.cu
 
-or
+then run 
 
-> nvcc main.cu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+> ./a.out
+
+### Details
+Currently the code does not fully compute the CBET. The code will output several files to a folder "outputs". To plot these files run
+
+>python3 cuPlot.py 
