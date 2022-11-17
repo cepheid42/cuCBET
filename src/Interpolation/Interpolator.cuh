@@ -1,8 +1,8 @@
 #ifndef CBET_INTERPOLATOR_CUH
 #define CBET_INTERPOLATOR_CUH
 
-#include "../Utilities/Defines.cuh"
-
+#include <cstring>
+#include "../Utilities/Utilities.cuh"
 
 /***********************************/
 /****** Clamp/Clip functions *******/
@@ -11,26 +11,55 @@ _hd inline constexpr T clip(const T& n, const T& lower, const T& upper) {
   return max(lower, min(n, upper));
 }
 
+template<InterpType I, class Manager>
+class Interpolator;
 
 /**********************************/
 /****** Linear Interpolator *******/
-class LinearInterp {
+template<class Manager>
+class Interpolator<LINEAR, Manager> : public Manager {
 public :
-  LinearInterp(float* xp, float* yp, uint32_t size)
-  : xp{xp}, yp{yp}, size{size}
-  {}
+  Interpolator(float* xs, float* ys, uint32_t size)
+  : size{size}
+  {
+//    if constexpr(std::is_same<Manager, cpu_managed>::value) {
+      xp = new float[size];
+      yp = new float[size];
+      std::memcpy(xp, xs, size * sizeof(float));
+      std::memcpy(yp, ys, size * sizeof(float));
+//    } else {
+//      cudaChk(cudaMallocManaged(&xp, size * sizeof(float)))
+//      cudaChk(cudaDeviceSynchronize())
+//      cudaChk(cudaMallocManaged(&yp, size * sizeof(float)))
+//      cudaChk(cudaDeviceSynchronize())
+//
+//      cudaChk(cudaMemcpy(&xp, &xs, size * sizeof(float), cudaMemcpyDefault))
+//      cudaChk(cudaMemcpy(&yp, &ys, size * sizeof(float), cudaMemcpyDefault))
+//      cudaChk(cudaDeviceSynchronize())
+//    }
+  }
 
   float operator()(float x) const {
     // If x is outside range of data,
     // return endpoints, no interpolation possible
-    if (x > xp[size - 1]) { return yp[size - 1]; }
-    if (x < xp[0]) { return yp[0]; }
+    if (x >= xp[size - 1]) {
+      std::cout << "too big!" << std::endl;
+      return yp[size - 1];
+    }
+    if (x <= xp[0]) {
+      std::cout << "too small!" << std::endl;
+      return yp[0];
+    }
 
     // Otherwise find first index with x-value
     // greater than given value
     uint32_t xi;
-    for (auto i = 1; i < size - 1; i++) {
-      if (x <= xp[i]) { xi = i; }
+    for (uint32_t i = 1; i < size - 1; i++) {
+      if (x <= xp[i]) {
+        std::cout << "Found next biggest at " << i << "(" << x << " < " << xp[i] << ")" << std::endl;
+        xi = i;
+        break;
+      }
     }
 
     // Get data and calculate deltas
@@ -43,6 +72,7 @@ public :
     // Avoid divide by zero
     float dy = y1 - y0;
     float dx = x1 - x0;
+    std::cout << "computing deltas! " << dx << " " << dy << std::endl;
     assert(dx != 0.0f);
 
     // Compute and return interpolated value
@@ -57,23 +87,23 @@ private:
 
 /************************************/
 /****** BiLinear Interpolator *******/
-class BiLinearInterp {
-public:
-  BiLinearInterp(float* xp, float* yp, float* zp, uint32_t xsize, uint32_t ysize)
-  : xp{xp}, yp{yp}, zp{zp},
-    xsize{xsize}, ysize{ysize}
-  {}
-
-  float operator()(float x, float y) const {
-
-  }
-
-private:
-  float* xp;
-  float* yp;
-  float* zp;
-  uint32_t xsize, ysize;
-};
+//class BiLinearInterp {
+//public:
+//  BiLinearInterp(float* xp, float* yp, float* zp, uint32_t xsize, uint32_t ysize)
+//  : xp{xp}, yp{yp}, zp{zp},
+//    xsize{xsize}, ysize{ysize}
+//  {}
+//
+//  float operator()(float x, float y) const {
+//
+//  }
+//
+//private:
+//  float* xp;
+//  float* yp;
+//  float* zp;
+//  uint32_t xsize, ysize;
+//};
 
 /*************************************/
 /****** TriLinear Interpolator *******/

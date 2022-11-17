@@ -2,6 +2,7 @@
 #define CBET_BEAMS_CUH
 
 #include "../Utilities/Utilities.cuh"
+#include "../Interpolation/Interpolator.cuh"
 #include "Rays.cuh"
 
 inline constexpr uint32_t num_rings = 10;

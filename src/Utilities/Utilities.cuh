@@ -22,6 +22,7 @@
 //--------------------------------------------------
 // Project Includes
 #include "Defines.cuh"
+#include "PolicyManagers.cuh"
 #include "BestMatrix.cuh"
 #include "Vector.cuh"
 #include "EnumTypes.cuh"
