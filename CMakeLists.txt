@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
-project(CBET CUDA)
+project(cuCBET CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
-add_executable(CBET ./src/main.cu src/Utilities/EnumTypes.cuh)
+add_executable(cuCBET ./src/main.cu)
 
-target_include_directories(CBET PUBLIC ./src)
+target_include_directories(cuCBET PUBLIC ./src)
 
 #set_target_properties(CBET PROPERTIES
 #        CUDA_SEPARABLE_COMPILATION ON)

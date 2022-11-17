@@ -1,0 +1,15 @@
+cmake-build-debug
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+IntpBilinear2.h
+IntpLinearNonuniform2.h
+IntpTrilinear3.h
+
+*.gif
+*.mp4
+*.png
+*.csv
+*.txt
+a.out
