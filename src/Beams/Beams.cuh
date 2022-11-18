@@ -8,6 +8,10 @@
 inline constexpr uint32_t num_rings = 10;
 inline constexpr uint32_t m = (num_rings + 1) * num_rings;
 
+float calc_intensity(float r, float I0, float w) {
+  return I0 * std::exp(-2.0f * SQR(r / w));
+}
+
 struct Beam {
   uint32_t ID;
   vec3 k_vec;
@@ -17,7 +21,13 @@ struct Beam {
   uint32_t nRays;
   Ray* rays;
 
-  Beam(const Parameters& params, uint32_t ID, float3 origin, vec3 kvec, float r, float I, uint32_t nrays)
+  Beam(const Parameters& params, 
+       uint32_t ID, 
+       float3 origin, 
+       vec3 kvec, 
+       float r, 
+       float I0, 
+       uint32_t nrays)
   : ID(ID),
     origin(origin),
     k_vec(kvec),
@@ -29,33 +39,22 @@ struct Beam {
     cudaChk(cudaMallocManaged(&rays, nrays * sizeof(Ray)))
     cudaChk(cudaDeviceSynchronize())
 
-    auto rad = r / num_rings;
+    auto rad = radius / num_rings;
     auto nraysf = static_cast<float>(nrays);
 
-    auto x0 = static_cast<uint32_t>((origin.x - params.minX() - radius) / params.dx());
-    auto y0 = static_cast<uint32_t>((origin.y - params.minY() - radius) / params.dy());
-    auto z0 = static_cast<uint32_t>((origin.z - params.minZ() - radius) / params.dz());
-
-    auto x1 = static_cast<uint32_t>((origin.x - params.minX() + radius) / params.dx());
-    auto y1 = static_cast<uint32_t>((origin.y - params.minY() + radius) / params.dy());
-    auto z1 = static_cast<uint32_t>((origin.z - params.minZ() + radius) / params.dz());
-
+    auto width = 0.6f * 2.0f * radius;
+    auto raycount = 0;
+    nvcc
     for (auto ring = 1; ring <= num_rings; ring++) {
       auto fring = static_cast<float>(ring);
       auto num_rays = static_cast<uint32_t>(std::round((2.0f * nraysf * fring) / m));
       auto dr2 = SQR(fring * rad);
 
-      for (auto ray = 0; ray < num_rays; ray++) {
-        for (auto i = x0; i < x1; i++) {
-          for (auto j = y0; j < y1; j++) {
-            auto x = (static_cast<float>(i) * params.dx());
-            auto y = (static_cast<float>(j) * params.dy());
+      auto I_ray = calc_intensity(rad, intensity, width);
 
-            if (SQR(x) + SQR(y) <= dr2) {
-              // create ray
-            }
-          }
-        }
+      for (auto theta = 0; theta < num_rays; theta++) {
+        rays[raycount] = {dim3(0, 0, 0), vec3(0, 0, 0), I_ray};
+        raycount++;
       }
     }
   }
