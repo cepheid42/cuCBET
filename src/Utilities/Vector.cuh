@@ -9,7 +9,7 @@ template<typename T>
 struct Vector {
   T e[3];
   
-  Vector() = default;
+  _hd Vector() = default;
   _hd Vector(T e0, T e1, T e2) : e{e0, e1, e2} {};
 
   _hd T x() const { return e[0]; }
@@ -126,6 +126,41 @@ _hd Vector<T> cross(const Vector<T>& u, const Vector<T>& v) {
           u.e[0] * v.e[1] - u.e[1] * v.e[0]};
 }
 
+template<typename T>
+_hd Vector<T> cylindrical_to_spherical(T r, T h, T phi) {
+  auto rho = sqrt(SQR(r) + SQR(h));
+  auto theta = atan2(r, h);
+
+  return {rho, phi, theta};
+}
+
+template<typename T>
+_hd Vector<T> spherical_to_cartesian(T r, T phi, T theta) {
+  auto x = r * sin(theta) * cos(phi);
+  auto y = r * sin(theta) * sin(phi);
+  auto z = r * cos(theta);
+
+  return {x, y, z};
+}
+
+template<typename T>
+_hd Vector<T> cartesian_to_spherical(T x, T y, T z) {
+  auto r = sqrt(SQR(x) + SQR(y) + SQR(z));
+  auto theta = atan2(sqrt(SQR(x) + SQR(y)), z);
+  auto phi = atan2(y, x);
+
+  return {r, phi, theta};
+}
+
+template<typename T>
+_hd Vector<T> rotate(const Vector<T>& v, T theta) {
+  const auto cos = cos(theta);
+  const auto sin = sin(theta);
+  auto xp = v.x() * cos + v.y() * sin;
+  auto yp = -v.x() * sin + v.y() * cos;
+
+  return {xp, yp, v.z()};
+}
 //--------------------------------------------------
 // Printing Function
 template<typename T>

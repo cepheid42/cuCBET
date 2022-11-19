@@ -4,9 +4,8 @@
 #include "../Utilities/Utilities.cuh"
 
 struct Ray {
-  dim3 ray_origin;
-  vec3 k_vec;
-  float amp;
+  vec3 ray_norm;
+  float intensity;
 };
 
 #endif //CBET_RAYS_CUH
