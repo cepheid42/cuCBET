@@ -126,41 +126,48 @@ _hd Vector<T> cross(const Vector<T>& u, const Vector<T>& v) {
           u.e[0] * v.e[1] - u.e[1] * v.e[0]};
 }
 
+// To Cartesian Coordinates
 template<typename T>
-_hd Vector<T> cylindrical_to_spherical(T r, T h, T phi) {
-  auto rho = sqrt(SQR(r) + SQR(h));
-  auto theta = atan2(r, h);
-
-  return {rho, phi, theta};
+_hd Vector<T> cylindrical_to_cartesian(const Vector<T>& v) {
+  auto x = v[0] * cos(v[1]);
+  auto y = v[0] * sin(v[1]);
+  return {x, y, v[2]};
 }
 
 template<typename T>
-_hd Vector<T> spherical_to_cartesian(T r, T phi, T theta) {
-  auto x = r * sin(theta) * cos(phi);
-  auto y = r * sin(theta) * sin(phi);
-  auto z = r * cos(theta);
-
+_hd Vector<T> spherical_to_cartesian(const Vector<T>& v) {
+  auto x = v[0] * sin(v[2]) * cos(v[1]);
+  auto y = v[0] * sin(v[2]) * sin(v[1]);
+  auto z = v[0] * cos(v[2]);
   return {x, y, z};
 }
 
+// To Cylindrical Coordinates
 template<typename T>
-_hd Vector<T> cartesian_to_spherical(T x, T y, T z) {
-  auto r = sqrt(SQR(x) + SQR(y) + SQR(z));
-  auto theta = atan2(sqrt(SQR(x) + SQR(y)), z);
-  auto phi = atan2(y, x);
-
-  return {r, phi, theta};
+_hd Vector<T> cartesian_to_cylindrical(const Vector<T>& v) {
+  auto r = sqrt(SQR(v[0]) + SQR(V[1]));
+  auto theta = atan2(v[1], v[2]);
+  return {r, theta, z};
 }
 
+// To Spherical Coordinates
+template<typename T>
+_hd Vector<T> cartesian_to_spherical(const Vector<T>& v) {
+  auto rho = v.length();
+  auto theta = acos(v[2] / rho);
+  auto phi = acos(v[0] / sqrt(SQR(v[0]) + SQR(v[1])));
+  return {rho, theta, phi};
+}
+
+
+// rotates vector v around z-axis by theta radians
 template<typename T>
 _hd Vector<T> rotate(const Vector<T>& v, T theta) {
-  const auto cos = cos(theta);
-  const auto sin = sin(theta);
-  auto xp = v.x() * cos + v.y() * sin;
-  auto yp = -v.x() * sin + v.y() * cos;
-
+  auto xp = v.x() * cos(theta) + v.y() * sin(theta);
+  auto yp = -v.x() * sin(theta) + v.y() * cos(theta);
   return {xp, yp, v.z()};
 }
+
 //--------------------------------------------------
 // Printing Function
 template<typename T>
