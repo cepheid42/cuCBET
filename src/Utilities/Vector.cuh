@@ -69,7 +69,6 @@ struct Vector {
   _hd T length() const {
     return sqrt(length_squared());
   }
-  
 };
 
 //--------------------------------------------------
@@ -145,9 +144,9 @@ _hd Vector<T> spherical_to_cartesian(const Vector<T>& v) {
 // To Cylindrical Coordinates
 template<typename T>
 _hd Vector<T> cartesian_to_cylindrical(const Vector<T>& v) {
-  auto r = sqrt(SQR(v[0]) + SQR(V[1]));
+  auto r = sqrt((v[0] * v[0]) + (v[1] * v[1]));
   auto theta = atan2(v[1], v[2]);
-  return {r, theta, z};
+  return {r, theta, v[2]};
 }
 
 // To Spherical Coordinates
@@ -155,17 +154,16 @@ template<typename T>
 _hd Vector<T> cartesian_to_spherical(const Vector<T>& v) {
   auto rho = v.length();
   auto theta = acos(v[2] / rho);
-  auto phi = acos(v[0] / sqrt(SQR(v[0]) + SQR(v[1])));
+  auto phi = acos(v[0] / sqrt((v[0] * v[0]) + (v[1] * v[1])));
   return {rho, theta, phi};
 }
-
 
 // rotates vector v around z-axis by theta radians
 template<typename T>
 _hd Vector<T> rotate(const Vector<T>& v, T theta) {
-  auto xp = v.x() * cos(theta) + v.y() * sin(theta);
-  auto yp = -v.x() * sin(theta) + v.y() * cos(theta);
-  return {xp, yp, v.z()};
+  auto xp = v[0] * cos(theta) + v[1] * sin(theta);
+  auto yp = -v[0] * sin(theta) + v[1] * cos(theta);
+  return {xp, yp, v[2]};
 }
 
 //--------------------------------------------------

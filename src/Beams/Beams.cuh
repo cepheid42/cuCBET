@@ -14,7 +14,7 @@ float calc_intensity(float I0, float r, float w) {
 
 struct Beam {
   uint32_t ID;
-  vec3 b_norm
+  vec3 b_norm;
   float radius;
   float intensity;
   float z_R;        // Rayleigh length
@@ -40,7 +40,7 @@ struct Beam {
 };
 
 void Beam::init_cylindrical_rays() {
-  auto nraysf = static_cast<float>(nrays);
+  auto nraysf = static_cast<float>(nRays);
 
   auto dr = radius / num_rings;
   auto ds = m * Constants::PI * dr / nraysf;
