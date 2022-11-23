@@ -4,7 +4,7 @@ project(cuCBET CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
-add_executable(cuCBET ./src/main.cu src/Utilities/PolicyManagers.cuh)
+add_executable(cuCBET ./src/main.cu src/Utilities/PolicyManagers.cuh src/Tests/test_Vector3.cuh)
 
 target_include_directories(cuCBET PUBLIC ./src)
 

@@ -24,7 +24,7 @@
 #include "Defines.cuh"
 #include "PolicyManagers.cuh"
 #include "BestMatrix.cuh"
-#include "Vector.cuh"
+#include "Vector3.cuh"
 #include "EnumTypes.cuh"
 #include "Timing.cuh"
 

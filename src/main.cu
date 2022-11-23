@@ -1,5 +1,5 @@
-#include "Parameters/Parameters.cuh"
-#include "Beams/Beams.cuh"
+//#include "Parameters/Parameters.cuh"
+//#include "Beams/Beams.cuh"
 
 //uint32_t* marked  = 200 * nx * ny * nz * sizeof(uint32_t);
 //uint32_t* counter = nx * ny * nz * sizeof(uint32_t);
@@ -16,7 +16,11 @@
 
 //#include "./Utilities/Utilities.cuh"
 
+#include "./Tests/test_Vector3.cuh"
+
 int main() {
+
+  test_vector3(true);
 
   return 0;
 }
