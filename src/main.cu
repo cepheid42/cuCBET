@@ -22,5 +22,7 @@ int main() {
 
   test_vector3(true);
 
+  fill_matrix<<<dim3(32, 32, 32), dim3(8, 8 ,8)>>>()
+
   return 0;
 }
