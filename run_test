@@ -3,6 +3,6 @@
 #rm outputs/**/*.csv
 #rm a.out
 
-nvcc --std=c++17 -arch=sm_86 -lineinfo -Xcompiler -Wall src/main.cu
+nvcc --std=c++17 -lineinfo -Xcompiler -Wall src/main.cu
 
 ./a.out

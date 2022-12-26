@@ -16,13 +16,13 @@ if (!condition) {                                             \
                            message + "\n");                   \
 }
 
-#define cudaChk(ans)                                          \       
-if (code != cudaSuccess) {                                    \
+#define cudaChk(ans)                                          \
+if (ans != cudaSuccess) {                                    \
   throw std::runtime_error(std::string(__FILE__) + "(" +      \
                           std::string(__FUNCTION__) + "," +   \
                           std::to_string(__LINE__) + "): " +  \
                           "GPU Error: " +                     \
-                          cudaGetErrorString(code) + "\n");   \
+                          cudaGetErrorString(ans) + "\n");   \
 }
 
 // #define cudaChk(ans) { gpuAssert((ans)); }
@@ -35,13 +35,13 @@ if (code != cudaSuccess) {                                    \
 //   }
 // }
 
-#define assert_in_bounds(arr, val)         \
-if (val >= arr.size()) {
-  throw std::runtime_error(std::string(__FILE__) + "(" +      \
-                          std::string(__FUNCTION__) + "," +   \
-                          std::to_string(__LINE__) + "): " +  \
-                          " Out of bounds index: " +          \
-                          std::to_string(val));               \
-}
-
+/* #define assert_in_bounds(arr, val)                            \
+// if (val >= arr.size()) {                                      \
+//   throw std::runtime_error(std::string(__FILE__) + "(" +      \
+//                           std::string(__FUNCTION__) + "," +   \
+//                           std::to_string(__LINE__) + "): " +  \
+//                           " Out of bounds index: " +          \
+//                           std::to_string(val));               \
+// }
+*/
 #endif //CBET_DEFINES_CUH

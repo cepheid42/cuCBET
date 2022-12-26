@@ -31,7 +31,7 @@
 //--------------------------------------------------
 // Aliases
 using devMatrix = matrix_base<float, cuda_managed>;
-using vec3 = Vector<float>;
+using vec3 = Vector3<float>;
 
 //--------------------------------------------------
 // Constants

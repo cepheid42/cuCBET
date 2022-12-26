@@ -4,12 +4,11 @@
 #include "./Bezier.cuh"
 #include "../Utilities/Utilities.cuh"
 
-template<typename T>
 struct Ray : public BezierCurve {
   float intensity;
 
-  Ray(Vector3<T> origin, Vector3<T> center, Vector3<T> end, T intensity) 
-  : BezierCurve{origin, center, end}, intensity(intensity)
+  Ray(Vector3<float> origin, Vector3<float> center, Vector3<float> end, float intensity) 
+  : BezierCurve(origin, center, end), intensity(intensity)
   {}
 };
 

@@ -16,7 +16,9 @@
 
 //#include "./Utilities/Utilities.cuh"
 
-#include "./Tests/test_Vector3.cuh"
+// #include "./Tests/test_Vector3.cuh"
+
+#include "./Beams/Beams.cuh"
 
 int main() {
 
