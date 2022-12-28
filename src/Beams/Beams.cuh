@@ -7,14 +7,9 @@
 inline constexpr uint32_t num_rings = 5;
 inline constexpr float n0 = 8.32;
 
-// float omega_intensity(float I0, float r, float sigma) {
-//   return I0 * exp(-powf((r / sigma), 5.0));
-// }
-
 float calc_intensity(float I0, float r, float w) {
   return I0 * exp(-2.0 * SQR(r / w));
 }
-
 
 struct Beam {
   uint32_t ID;
@@ -24,7 +19,7 @@ struct Beam {
   float b_sigma;
   float I0;
   uint32_t nRays;
-  Ray<float>* rays;
+  Ray* rays;
 
   Beam(uint32_t ID, vec3 b_norm, float dist, float r, float sigma, float I0)
   : ID(ID), b_norm(b_norm), b_dist(dist), b_radius(r), b_sigma(sigma), I0(I0), nRays(128)
@@ -59,7 +54,7 @@ void Beam::init_rays() {
 
   auto e2 = unit_vector(cross(e1, b_norm));
 
-  rays[0] = Ray<float>{b_dist * b_norm, Vector3<float>(), -b_dist * b_norm};
+  rays[0] = Ray{b_dist * b_norm, Vector3<float>(), -b_dist * b_norm};
   int raycount = 1;
 
   for (auto i = 1; i <= num_rings; i++) {
@@ -75,7 +70,7 @@ void Beam::init_rays() {
 
       auto intensity = calc_intensity(I0, r, b_sigma);
 
-      rays[raycount] = Ray(origin, center, end, intensity);
+      rays[raycount] = Ray{origin, center, end, intensity};
       raycount++;
     }
   }
@@ -83,7 +78,7 @@ void Beam::init_rays() {
   assert(raycount == nRays);
 }
 
-void rays_to_csv(Beam b, std::string& filename) {
+void beam_to_csv(Beam& b, std::string& filename) {
   std::ofstream file("./outputs/" + filename + "_rays.csv");
 
   auto nt = 10;

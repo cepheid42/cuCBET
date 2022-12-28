@@ -26,5 +26,11 @@ int main() {
   std::cout << std::is_pod<BezierCurve>::value << std::endl;
   std::cout << std::is_pod<Ray>::value << std::endl;
 
+  vec3 bnorm{-1.0, 0.0, 0.0};
+  Beam b1 = new Beam(0, bnorm, 1.0, 0.1, 10.0, 1.0);
+
+  beam_to_csv
+
+
   return 0;
 }
