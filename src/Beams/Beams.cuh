@@ -4,7 +4,7 @@
 #include "../Utilities/Utilities.cuh"
 #include "Rays.cuh"
 
-inline constexpr uint32_t num_rings = 5;
+inline constexpr int num_rings = 5;
 inline constexpr float n0 = 8.32;
 
 float calc_intensity(float I0, float r, float w) {
@@ -18,20 +18,20 @@ struct Beam {
   float b_radius;
   float b_sigma;
   float I0;
-  uint32_t nRays;
+  int nRays;
   Ray* rays;
 
   Beam(uint32_t ID, vec3 b_norm, float dist, float r, float sigma, float I0)
   : ID(ID), b_norm(b_norm), b_dist(dist), b_radius(r), b_sigma(sigma), I0(I0), nRays(128)
   {
     // Initialize rays
-    cudaChk(cudaMallocManaged(&rays, nRays * sizeof(Ray<float>)))
+    cudaChk(cudaMallocManaged(&rays, nRays * sizeof(Ray)))
     cudaChk(cudaDeviceSynchronize())
 
     init_rays();    
   }
 
-  ~Beam() {
+  ~Beam() noexcept(false) {
     cudaChk(cudaDeviceSynchronize())
     cudaChk(cudaFree(rays))
   }
@@ -40,8 +40,8 @@ struct Beam {
 };
 
 void Beam::init_rays() {
-  const auto dr = b_dist / num_rings;
-  const auto a0 = std::sin(Constants::PI / n0);
+  const float dr = b_dist / num_rings;
+  const float a0 = std::sin(Constants::PI / n0);
   const auto beam_loc = b_dist * b_norm;
 
   Vector3<float> e1;
@@ -54,17 +54,17 @@ void Beam::init_rays() {
 
   auto e2 = unit_vector(cross(e1, b_norm));
 
-  rays[0] = Ray{b_dist * b_norm, Vector3<float>(), -b_dist * b_norm};
+  rays[0] = Ray{b_dist * b_norm, Vector3<float>{}, -b_dist * b_norm, I0};
   int raycount = 1;
 
   for (auto i = 1; i <= num_rings; i++) {
-    auto r = i * dr;
+    auto r = static_cast<float>(i) * dr;
     auto n = std::rintf(Constants::PI / std::asin(a0 / static_cast<float>(i)));
 
     for (auto j = 0; j < static_cast<int>(n); j++) {
-      auto theta = j * (2.0 * Constants::PI) / n;
+      float theta = j * (2.0 * Constants::PI) / n;
 
-      auto center = r * (std::cos(theta) * e1 + std::sin(theta) * e1);
+      auto center = r * (std::cos(theta) * e1 + std::sin(theta) * e2);
       auto origin = center + beam_loc;
       auto end = center - beam_loc;
 
@@ -78,24 +78,19 @@ void Beam::init_rays() {
   assert(raycount == nRays);
 }
 
-void beam_to_csv(Beam& b, std::string& filename) {
-  std::ofstream file("./outputs/" + filename + "_rays.csv");
+void beam_to_csv(Beam& b, const std::string& filename) {
+  std::ofstream file("./" + filename + "_rays.csv");
 
   auto nt = 10;
   auto dt = 1.0 / static_cast<float>(nt);
 
   for (auto i = 0; i < b.nRays; i++) {
     for (auto j = 0; j < nt; j++) {
-      auto t = j * dt;
+      float t = j * dt;
       
-      auto p = eval(b[i], t);
-      file << p;
-
-      if (j < nt - 1) {
-        file << ", ";
-      }
+      Vector3<float> p = b.rays[i].eval(t);
+      file << p << '\n';
     }
-    file << '\n'l
   }
 }
 

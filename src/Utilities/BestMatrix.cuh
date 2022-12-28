@@ -42,8 +42,8 @@ struct matrix_base : public Manager {
   _hd uint32_t get_index(uint32_t i, uint32_t j, uint32_t k) const { return (y * z * i) + (z * j) + k; }
 
   // 1D indexing
-  _hd T& operator[] (uint32_t offset) { assert_in_bounds(data, offset); return data[offset]; }
-  _hd const T& operator[] (uint32_t offset) const { assert_in_bounds(data, offset); return data[offset]; }
+  _hd T& operator[] (uint32_t offset) { return data[offset]; }
+  _hd const T& operator[] (uint32_t offset) const { return data[offset]; }
 
   // 2D indexing
   _hd T& operator() (uint32_t i, uint32_t j) { return data[get_index(i, j)]; }

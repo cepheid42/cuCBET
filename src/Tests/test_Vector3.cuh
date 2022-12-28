@@ -107,6 +107,9 @@ void test_vector3(bool test_gpu) {
   std::cout << "Testing Vector3<float> on CPU." << std::endl;
   const float EPSILON = 1.0E-7f;
 
+  // Test Plain-old-data/Standard-layout
+  assert(std::is_standard_layout<Vector3<float>>::value == true);
+
   // Test default initializer
   vec3 def_init{};
   assert(def_init[0] == 0.0 && def_init[1] == 0.0 && def_init[2] == 0.0);

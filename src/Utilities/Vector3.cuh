@@ -25,15 +25,6 @@ struct Vector3 {
   _hd Vector3 operator-()  const {
     return {-e[0], -e[1], -e[2]};
   }
-  
-  // Assignment Operators
-  _hd Vector3& operator=(const Vector3& rhs) {
-    if (this == &rhs) { return *this; }
-    e[0] = rhs.e[0];
-    e[1] = rhs.e[1];
-    e[2] = rhs.e[2];
-    return *this;
-  }
 
   _hd Vector3& operator+=(const Vector3& v) {
     e[0] += v.e[0];
