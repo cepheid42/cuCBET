@@ -75,7 +75,7 @@ void Beam::init_rays() {
 
       auto intensity = calc_intensity(I0, r, b_sigma);
 
-      rays[raycount] = Ray<float>(origin, center, end, intensity);
+      rays[raycount] = Ray(origin, center, end, intensity);
       raycount++;
     }
   }
@@ -83,7 +83,7 @@ void Beam::init_rays() {
   assert(raycount == nRays);
 }
 
-void rays_to_cbet(Beam b, std::string& filename) {
+void rays_to_csv(Beam b, std::string& filename) {
   std::ofstream file("./outputs/" + filename + "_rays.csv");
 
   auto nt = 10;

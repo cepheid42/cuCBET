@@ -16,15 +16,15 @@
 
 //#include "./Utilities/Utilities.cuh"
 
-// #include "./Tests/test_Vector3.cuh"
+#include <type_traits>
 
 #include "./Beams/Beams.cuh"
 
 int main() {
 
-  test_vector3(true);
-
-  fill_matrix<<<dim3(32, 32, 32), dim3(8, 8 ,8)>>>()
+  std::cout << std::is_pod<Vector3<float>>::value << std::endl;
+  std::cout << std::is_pod<BezierCurve>::value << std::endl;
+  std::cout << std::is_pod<Ray>::value << std::endl;
 
   return 0;
 }
