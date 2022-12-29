@@ -13,3 +13,5 @@ IntpTrilinear3.h
 *.csv
 *.txt
 a.out
+
+!beamnorms.csv
