@@ -7,6 +7,8 @@ IntpBilinear2.h
 IntpLinearNonuniform2.h
 IntpTrilinear3.h
 
+outputs
+
 *.gif
 *.mp4
 *.png
