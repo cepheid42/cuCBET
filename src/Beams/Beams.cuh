@@ -78,18 +78,40 @@ void Beam::init_rays() {
   assert(raycount == nRays);
 }
 
-void beam_to_csv(Beam& b, const std::string& filename) {
-  std::ofstream file(filename);
+template<typename T = float>
+std::vector<Vector3<T>> load_beam_normals(const std::string& filename) {
+  std::vector<Vector3<T>> beam_normals;
 
-  auto nt = 4;
-  auto dt = 1.0 / static_cast<float>(nt - 1);
+  std::ifstream file(filename);
+  std::string line;
 
-  for (auto i = 0; i < b.nRays; i++) {      
-    Vector3<float> p1 = b.rays[i].eval(0.0);
-    Vector3<float> p2 = b.rays[i].eval(0.5);
-    Vector3<float> p3 = b.rays[i].eval(1.0);
-    file << p1 << '\n' << p2 << '\n' << p3 << '\n';
+  while(std::getline(file, line)) {
+    Vector3<T> bnorm;
+    std::stringstream lineStream(line);
+
+    for (auto i = 0; i < 3; i++) {
+      lineStream >> bnorm[i];
+    }
+    beam_normals.push_back(bnorm);
   }
+  
+  return beam_normals;
 }
+
+// void beam_to_csv(Beam& b, const std::string& filename, int cutoff = 0) {
+//   std::ofstream file(filename);
+
+//   cutoff = std::max(cutoff, b.nRays);
+
+//   auto nt = 4;
+//   auto dt = 1.0 / static_cast<float>(nt - 1);
+
+//   for (auto i = 0; i < cutoff; i++) {      
+//     Vector3<float> p1 = b.rays[i].eval(0.0);
+//     Vector3<float> p2 = b.rays[i].eval(0.5);
+//     Vector3<float> p3 = b.rays[i].eval(1.0);
+//     file << p1 << '\n' << p2 << '\n' << p3 << '\n';
+//   }
+// }
 
 #endif //CBET_BEAMS_CUH

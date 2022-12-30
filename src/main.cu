@@ -11,36 +11,16 @@
 //float* polar_angle    = nbeams * nrays * ncrossings * sizeof(float);
 //float* wMult          = 2 * nbeams * nrays * ncrossings * sizeof(float);
 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
+
 
 //#include "Parameters/Parameters.cuh"
 #include "./Utilities/Utilities.cuh"
 #include "./Beams/Beams.cuh"
 
-template<typename T = float>
-std::vector<Vector3<T>> load_beam_normals(const std::string& filename) {
-  std::vector<Vector3<T>> beam_normals;
-
-  std::ifstream file(filename);
-  std::string line;
-
-  while(std::getline(file, line)) {
-    Vector3<T> bnorm;
-    std::stringstream lineStream(line);
-
-    for (auto i = 0; i < 3; i++) {
-      lineStream >> bnorm[i];
-    }
-    beam_normals.push_back(bnorm);
-  }
-  
-  return beam_normals;
+class CBET {
+  devMatrix eDen;
 }
+
 
 int main() {
   // auto beam_normals = load_beam_normals<float>("./beamnorms.csv");
@@ -50,9 +30,34 @@ int main() {
   //   beams.push_back(new Beam(i, beam_normals[i], 1.0, 0.1, 10.0, 1.0));
   // }
 
-  auto beam = new Beam(0, Vector3<float>(1.0, 0.0, 0.0), 1.0, 0.1, 10.0, 1.0);
+  // int nx = 100;
+  // int ny = nx;
+  // int nz = nx;
 
-  beam_to_csv(*beam, "./outputs/beam1.csv");
+  // float xmin = -0.0013; // meters
+  // float xmax = 0.0013; // meters
+
+  // float dx = (xmax - xmin) / float(nx - 1);
+  // float dy = dx;
+  // float dz = dx;
+
+  // float beam_radius = 2.0E-6; // meters
+
+  // float lambda_beam = 3.51E-7 // meters (351 nm)
+  // float freq_beam = Constants::C0 / lambda;
+  // float omega_beam = 2.0 * Constants::PI * freq_beam;
+  // float sigma_beam = 0.0375;
+  // float I0_beam = 1.0;
+
+  // float ncrit = 1.0E-6 * SQR(omega_beam) * Constants::Me * Constants::EPS0 / SQR(Constants::qe);
+
+  // float mach_max = 2.4;
+  // float mach_min = 0.4;
+
+  // float eDen_max = 0.3;
+  // float eDen_min = 0.1;
+  // float eDen_step = (eDen_max - eDen_min) / 
+
 
   return 0;
 }
