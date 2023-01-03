@@ -17,18 +17,21 @@
 #include "./Utilities/Utilities.cuh"
 #include "./Beams/Beams.cuh"
 
-class CBET {
-  devMatrix eDen;
-}
-
 
 int main() {
-  // auto beam_normals = load_beam_normals<float>("./beamnorms.csv");
-  // std::vector<Beam*> beams;
+  cpuTimer timer;
+  timer.start();
 
-  // for (auto i = 0; i < 60; i++) {
-  //   beams.push_back(new Beam(i, beam_normals[i], 1.0, 0.1, 10.0, 1.0));
-  // }
+  auto beam_normals = load_beam_normals<float>("./beamnorms.csv");
+  std::vector<Beam*> beams;
+
+  for (auto i = 0; i < 60; i++) {
+    beams.push_back(new Beam(i, beam_normals[i], 1.0, 0.1, 10.0, 1.0));
+  }
+
+  timer.stop();
+  std::cout << "Time: " << timer.elapsed() << std::endl;
+
 
   // int nx = 100;
   // int ny = nx;
