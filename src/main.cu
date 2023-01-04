@@ -15,7 +15,7 @@
 
 //#include "Parameters/Parameters.cuh"
 #include "./Utilities/Utilities.cuh"
-#include "./Beams/Beams.cuh"
+#include "./Beams/Beams2D.cuh"
 
 
 int main() {

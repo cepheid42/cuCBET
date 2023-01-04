@@ -57,6 +57,31 @@ __host__ __device__ T SQR(T x) { return x * x; }
 template<typename T>
 __host__ __device__ T CUBE(T x) { return x * x * x; }
 
+template<typename T, int num>
+struct linspace {
+  T e[num];
+
+  linspace(T start, T stop) {
+    auto delta = (stop - start) / T(num - 1));
+    for (int i = 0; i < num - 1; i++) {
+      e[i] = start + delta * T(i);
+    }
+  }
+
+  // Subscript Operators
+  _hd T operator[] (int idx) const { return e[idx]; }
+  _hd T& operator[] (int idx) { return e[idx]; }
+};
+
+__host__ __device__ T* linspace(T start, T stop, T num) {
+  T* result = new T[num];
+  auto delta = (stop - start) / (num - T(1.0));
+  for (int i = 0; i < num - 1; i++) {
+    result[i] = start + delta * T(i);
+  }
+  return result;
+}
+
 //--------------------------------------------------
 // Matrix Utility Functions
 __global__ void fill_matrix(devMatrix& matrix, const float value) {

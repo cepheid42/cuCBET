@@ -2,7 +2,7 @@
 #define CBET_BEAMS_CUH
 
 #include "../Utilities/Utilities.cuh"
-#include "Rays.cuh"
+#include "Rays3D.cuh"
 
 inline constexpr int num_rings = 5;
 inline constexpr float n0 = 8.32;
@@ -31,7 +31,7 @@ struct Beam {
     init_rays();    
   }
 
-  ~Beam() noexcept(false) {
+  ~Beam() {
     cudaChk(cudaDeviceSynchronize())
     cudaChk(cudaFree(rays))
   }
