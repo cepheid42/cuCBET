@@ -14,23 +14,68 @@
 
 
 //#include "Parameters/Parameters.cuh"
-#include "./Utilities/Utilities.cuh"
-#include "./Beams/Beams2D.cuh"
+// #include "./Utilities/Utilities.cuh"
+// #include "./Beams/Beams2D.cuh"
 
+#include "./Utilities/BesterMatrix.cuh"
 
 int main() {
-  cpuTimer timer;
-  timer.start();
+  int nx = 10;
+  uint32_t ny = 10;
+  uint32_t nz = 10;
+  uint32_t nw = 10;
 
-  auto beam_normals = load_beam_normals<float>("./beamnorms.csv");
-  std::vector<Beam*> beams;
+  auto D = new matrix_base<float, 1, cuda_managed>(nx);
+  auto A = new matrix_base<float, 2, cuda_managed>(nx, ny);
+  auto B = new matrix_base<float, 3, cuda_managed>(nx, ny, nz);
+  auto C = new matrix_base<float, 4, cuda_managed>(nx, ny, nz, nw);
 
-  for (auto i = 0; i < 60; i++) {
-    beams.push_back(new Beam(i, beam_normals[i], 1.0, 0.1, 10.0, 1.0));
+  for (auto i = 0; i < nx; i++)
+  {
+    (*D)(i) = D->get_index(i);
+    for (auto j = 0; j < ny; j++)
+    {
+      (*A)(i, j) = A->get_index(i, j);
+      for (auto k = 0; k < nz; k++)
+      {
+        (*B)(i, j, k) = B->get_index(i, j, k);
+        for (auto l = 0; l < nw; l++)
+        {
+          (*C)(i, j, k, l) = C->get_index(i, j, k, l);
+        }
+      }
+    }
   }
+  
+  for (auto i = 0; i < nx; i++) {
+    // std::cout << (*D)(i) << " ";
+    for (auto j = 0; j < ny; j++) {
+      // std::cout << (*A)(i, j) << " ";
+      for (auto k = 0; k < nz; k++) {
+        // std::cout << (*B)(i, j, k) << " ";
+        for (auto l = 0; l < nw; l++) {
+          std::cout << (*C)(i, j, k, l) << '\n';
+        }
+      }
+    }
+  }
+  // for (auto i = 0; i < nx; i++) {
+  //   for (auto j = 0; j < ny; j++) {
+  //     for ()
+  //   }
+  // }
+  // cpuTimer timer;
+  // timer.start();
 
-  timer.stop();
-  std::cout << "Time: " << timer.elapsed() << std::endl;
+  // auto beam_normals = load_beam_normals<float>("./beamnorms.csv");
+  // std::vector<Beam*> beams;
+
+  // for (auto i = 0; i < 60; i++) {
+  //   beams.push_back(new Beam(i, beam_normals[i], 1.0, 0.1, 10.0, 1.0));
+  // }
+
+  // timer.stop();
+  // std::cout << "Time: " << timer.elapsed() << std::endl;
 
 
   // int nx = 100;
