@@ -14,7 +14,7 @@ struct Beam {
   int nRays;
   Ray2D* rays;
 
-  Beam(uint32_t, Vector2<float>, float, float, float, float);
+  Beam(uint32_t, vec2<float>, float, float, float, float);
   ~Beam();
   void init_rays();
 };
