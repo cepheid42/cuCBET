@@ -3,22 +3,6 @@
 
 #include "../Utilities/Utilities.cuh"
 
-//#ifdef USE_OMEGA
-//auto spacesize = 5E-4;
-//auto beam_min_x = -2E-4;
-//auto beam_max_x = 2E-4;
-//auto nbeams = 3;
-//auto beam_stddev = 2;
-//auto intensity = 1E17;
-//#else
-//auto spacesize = 0.13;
-//auto beam_min_x = -450E-4;
-//auto beam_max_x = 450E-4;
-//auto nbeams = 2;
-//auto beam_stddev = 1;
-//auto intensity = 1E14;
-//#endif
-
 class Parameters {
 public:
   Parameters(dim3 Ldims, float3 Pmax, float3 Pmin, float CFL_r, uint32_t nBeams)
