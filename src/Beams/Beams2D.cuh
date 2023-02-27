@@ -2,40 +2,45 @@
 #define CUCBET_BEAMS2D_CUH
 
 #include "../Utilities/Utilities.cuh"
-#include "Rays2D.cuh"
+#include "../Parameters/Parameters.cuh"
+#include "Ray2D.cuh"
 
+struct linspace {
+  p[1]== p + 3t^-1 (1-t)(p-p[0]) + t(1-t)^-1(p-p[2])+3t^2(1-t)^2(p-p[3])
+p[2]== p + 3t^-2(1-t)^2(p-p[0])+t^-1 (1-t)(p-p[1])+3t(1-t)^-1(p-p[3])
+};
+
+template<typename T>
 struct Beam {
   uint32_t ID;
-  float b_norm[2];
-  float b_dist;
-  float b_radius;
-  float b_sigma;
-  float I0;
-  int nRays;
+  BeamParams params;
   Ray2D* rays;
 
-  Beam(uint32_t, vec2<float>, float, float, float, float);
+  Beam(const Parameters&, uint32_t, vec2<T>);
   ~Beam();
   void init_rays();
 };
 
-Beam::Beam(uint32_t ID, Vector2<float> _b_norm, float dist, float r, float sigma, float I0)
-: ID(ID), b_norm(_b_norm), b_dist(dist), b_radius(r), b_sigma(sigma), I0(I0), nRays(128)
+template<typename T>
+Beam<T>::Beam(const Parameters& _params, uint32_t ID, vec2<T> _b_norm)
+: ID(ID), b_norm(_b_norm), params(_params.beam)
 {
   // Initialize rays
-  cudaChk(cudaMallocManaged(&rays, nRays * sizeof(Ray2D)))
+  cudaChk(cudaMallocManaged(&rays, params.nRays * sizeof(Ray2D)))
   cudaChk(cudaDeviceSynchronize())
 
   init_rays();
 }
 
-Beam::~Beam() {
+template<typename T>
+Beam<T>::~Beam() {
   cudaChk(cudaDeviceSynchronize())
   cudaChk(cudaFree(rays))
 }
 
-void Beam::init_beam() {
-  linspace<float, nRays> phase_x;
+template<typename T>
+void Beam<T>::init_rays() {
+
 }
 
 #endif //CUCBET_BEAMS2D_CUH
