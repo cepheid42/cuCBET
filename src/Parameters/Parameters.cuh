@@ -9,7 +9,7 @@ struct BeamParams {
   FPTYPE radius;
   FPTYPE sigma;
   FPTYPE intensity;
-  FPTYPE lambda;
+  FPTYPE omega;
   uint32_t nrays;
 };
 
@@ -20,8 +20,10 @@ struct Parameters {
   FPTYPE CFL;
   FPTYPE dx;
   FPTYPE dy;
+  FPTYPE dt;
   vec2<FPTYPE> x;
   vec2<FPTYPE> y;
+  FPTYPE n_crit;
 };
 
 #endif //CBET_PARAMETERS_CUH

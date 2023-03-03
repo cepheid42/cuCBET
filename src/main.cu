@@ -19,7 +19,7 @@ int main() {
   auto nt = nx / cfl;
 
   FPTYPE lambda = 3.5E-5; // cm
-
+  auto omega = 2.0 * Constants::PI * (Constants::C0 / lambda);
 
 
   return 0;

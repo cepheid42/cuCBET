@@ -46,7 +46,7 @@ __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_manag
 
   auto radius = -bparams.radius + (ray_id * delta);
   auto intensity = calculate_intensity<T>(radius, bparams.intensity, bparams.sigma);
-  auto omega = 2.0 * Constants::PI * (Constants::C0 / bparams.lambda);
+
 
   vec2<T> ray_start{bparams.b_norm[0], bparams.b_norm[1]};
   // Beam 0 is x=0, Beam 1 is y=0
@@ -54,8 +54,58 @@ __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_manag
 
   auto xi = get_node_index(ray_start[0], params.x[0], params.dx);
   auto yi = get_node_index(ray_start[1], params.y[0], params.dy);
+
   auto omega_p_sqr = (e_density(xi, yi) * SQR(Constants::qe)) / (Constants::EPS0 * Constants::Me);
-  auto k = sqrt(SQR(omega) - omega_p_sqr) / Constants::C0;
+  auto k = sqrt(SQR(bparams.omega) - omega_p_sqr) / Constants::C0;
+
+  auto v_grp = -bparams.b_norm * (SQR(Constants::C0) * k) / bparams.omega;
+
+  auto grad_const = (params.dt * SQR(Constants::C0)) / (2.0 * params.n_crit);
+
+  vec2<T> position{ray_start};
+
+  vec2<T> onethird{};
+  vec2<T> twothird{};
+  for (uint32_t t = 0; t < params.nt; ++t) {
+    uint32_t xm, xp;
+    if (xi == 0) {
+      xm = 0;
+      xp = 1;
+    } else if (xi == e_density.dims[0] - 1) {
+      xm = e_density.dims[0] - 2;
+      xp = e_density.dims[0] - 1;
+    } else {
+      xm = xi - 1;
+      xp = xi;
+    }
+
+    uint32_t ym, yp;
+    if (yi == 0) {
+      ym = 0;
+      yp = 1;
+    } else if (yi == e_density.dims[1] - 1) {
+      ym = e_density.dims[1] - 2;
+      yp = e_density.dims[1] - 1;
+    } else {
+      ym = yi - 1;
+      yp = yi;
+    }
+
+    vec2<T> e_den_grad = {(e_density(xp, yi) - e_density(xm, yi)), (e_density(xi, yp) - e_density(xi, ym))};
+    e_den_grad *= grad_const;
+
+    v_grp -= e_den_grad;
+
+    position += params.dt * v_grp;
+
+    auto ratio = T(t / params.nt);
+    if (abs(ratio - (1.0 / 3.0)) < 1.0E-7) {
+      onethird = position;
+    }
+    if (abs(ratio - (2.0 / 3.0)) < 1.0E-7) {
+      twothird = position;
+    }
+  }
 }
 
 
