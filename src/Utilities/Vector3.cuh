@@ -1,5 +1,5 @@
-#ifndef GPUEM_vec3_CUH
-#define GPUEM_vec3_CUH
+#ifndef CUCBET_VEC3_CUH
+#define CUCBET_VEC3_CUH
 
 #include <iostream>
 #include <cmath>
@@ -207,4 +207,4 @@ std::ostream& operator<<(std::ostream& out, const vec3<T>& dat) {
   return (out << dat.e[0] << ' ' << dat.e[1] << ' ' << dat.e[2]);
 }
 
-#endif //GPUEM_vec3_CUH
+#endif //CUCBET_VEC3_CUH

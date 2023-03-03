@@ -1,6 +1,0 @@
-#ifndef CBET_ENUMTYPES_CUH
-#define CBET_ENUMTYPES_CUH
-
-enum class InterpType { LINEAR, BILINEAR, TRILINEAR };
-
-#endif //CBET_ENUMTYPES_CUH

@@ -1,31 +1,30 @@
-#ifndef CBET_UTILITIES_CUH
-#define CBET_UTILITIES_CUH
+#ifndef CUCBET_UTILITIES_CUH
+#define CUCBET_UTILITIES_CUH
 
 //--------------------------------------------------
 // C++ Standard Library Includes
 
 // Types
-#include <vector>
+//#include <vector>
 #include <cstdint>
-#include <string>
-#include <chrono>
+//#include <string>
+//#include <chrono>
 
 // Utilities
 #include <cmath>
-#include <algorithm>
+//#include <algorithm>
 #include <cassert>
 
 // IO
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <sstream>
+//#include <sstream>
 
 //--------------------------------------------------
 // Project Includes
 #include "BesterMatrix.cuh"
 #include "Vector2.cuh"
-#include "EnumTypes.cuh"
 #include "Timing.cuh"
 
 //--------------------------------------------------
@@ -77,4 +76,4 @@ __global__ void assert_matrix(devMatrix<DIM>& matrix, const FPTYPE value) {
   }
 }
 
-#endif //CBET_UTILITIES_CUH
+#endif //CUCBET_UTILITIES_CUH
