@@ -14,16 +14,16 @@ struct BeamParams {
 };
 
 struct Parameters {
-  uint32_t nx;
-  uint32_t ny;
-  uint32_t nt;
+  vec2<FPTYPE> x;
+  vec2<FPTYPE> y;
   FPTYPE CFL;
   FPTYPE dx;
   FPTYPE dy;
   FPTYPE dt;
-  vec2<FPTYPE> x;
-  vec2<FPTYPE> y;
   FPTYPE n_crit;
+  uint32_t nx;
+  uint32_t ny;
+  uint32_t nt;
 };
 
 #endif //CBET_PARAMETERS_CUH

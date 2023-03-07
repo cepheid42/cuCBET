@@ -21,7 +21,7 @@ struct vec2 {
   hd const T& operator[] (uint32_t idx) const { return e[idx]; }
 
   // Unary Negation
-  hd vec2 operator-()  const {
+  hd vec2 operator-() const {
     return {-e[0], -e[1]};
   }
 

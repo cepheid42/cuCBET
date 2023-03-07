@@ -25,11 +25,11 @@
 // Project Includes
 #include "BesterMatrix.cuh"
 #include "Vector2.cuh"
-#include "Timing.cuh"
+
 
 //--------------------------------------------------
 // Aliases
-using FPTYPE = float;
+using FPTYPE = double;
 template<int DIM> using devMatrix = matrix_base<FPTYPE, DIM, cuda_managed>;
 
 //--------------------------------------------------

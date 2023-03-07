@@ -34,24 +34,24 @@ struct Beam2D : Manager {
   }
 };
 
-template<typename T>
-__global__ void calc_grad_ne(devMatrix<2>& ne_grad, const devMatrix<2>& ne) {
-  
-  /*
-  * todo: gradient of electron density in x, y directions
-  */
-
-}
-
-template<typename T>
-hd void interp2D(...) {
-
-  /*
-  * todo: interpolate between 4 points
-  * https://en.wikipedia.org/wiki/Bilinear_interpolation~
-  */
-
-}
+//template<typename T>
+//__global__ void calc_grad_ne(devMatrix<2>& ne_grad, const devMatrix<2>& ne) {
+//
+//  /*
+//  * todo: gradient of electron density in x, y directions
+//  */
+//
+//}
+//
+//template<typename T>
+//hd void interp2D(...) {
+//
+//  /*
+//  * todo: interpolate between 4 points
+//  * https://en.wikipedia.org/wiki/Bilinear_interpolation~
+//  */
+//
+//}
 
 template<typename T>
 __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_managed>& beams, const devMatrix<2>& ne_grad) {
@@ -66,14 +66,15 @@ __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_manag
   auto radius = -bparams.radius + (ray_id * delta);
   auto init_intensity = calculate_intensity<T>(radius, bparams.intensity, bparams.sigma);
 
-  // Initial K-vector
+  // Initial position and k-vector
+  vec2<T> ray_start{bparams.b_norm[0], bparams.b_norm[1]};
   vec2<T> kvec{bparams.b_norm[0], bparams.b_norm[1]};
 
   // Beam 0 is x=0, Beam 1 is y=0
   ray_start[beam_id] += radius;
 
-  // Initial position
-  vec2<T> position{ray_start};
+  // Initial ray_end point
+  vec2<T> ray_end{ray_start};
 
   // Intermediate points for bezier construction
   vec2<T> onethird{};
@@ -82,38 +83,34 @@ __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_manag
   auto t23 = floor((2 / 3) * params.nt);
 
   // Coefficients for various things
-  auto coef1 = -params.omega / (2.0 * params.n_crit);
-  auto coef2 = SQR(C) / params.omega;
+  auto coef1 = -(bparams.omega * params.dt) / (2.0 * params.n_crit);
+  auto coef2 = (SQR(Constants::C0) * params.dt) / bparams.omega;
   
   // Time step ray through domain
   for (uint32_t t = 0; t < params.nt; ++t) {
-    // Calculate nearest nodes to ray position
-    auto xi = get_node_index(ray_start[0], params.x[0], params.dx);
-    auto yi = get_node_index(ray_start[1], params.y[0], params.dy);
-
     // Calculate k + dk
-    // ne_grad should be (dne_x, dne_y)
-    auto dk = coef1 * params.dt * ne_grad(xi, yi);
+    // interpolate gradient of ne
+    auto dk = coef1 * interp2D(ne_grad, ray_end);
     kvec += dk;
 
     // Calculate x + dx
     auto dx = coef2 * kvec;
-    position += dx;
+    ray_end += dx;
 
     // Save intermediate points at t = 1/3 and t = 2/3
     if (t == t13) {
-      onethird = position;
+      onethird = ray_end;
     }
     if (t == t23) {
-      twothird = position;
+      twothird = ray_end;
     }
   }
 
   // Construct bezier curve
-  auto P1 = (1.0 / 6.0) * (18.0 * onethird - 9.0 * twothird - 5.0 * ray_start + 2.0 * position);
-  auto P2 = (1.0 / 6.0) * (-9.0 * onethird + 18.0 * twothird + 2.0 * ray_start - 5.0 * position);
+  auto P1 = (1.0 / 6.0) * (18.0 * onethird - 9.0 * twothird - 5.0 * ray_start + 2.0 * ray_end);
+  auto P2 = (1.0 / 6.0) * (-9.0 * onethird + 18.0 * twothird + 2.0 * ray_start - 5.0 * ray_end);
 
-  beam.rays[ray_id] = {ray_start, P1, P2, position, intensity};
+  beam.rays[ray_id] = {ray_start, P1, P2, ray_end, init_intensity};
 }
 
 #endif //CUCBET_BEAM2D_CUH
