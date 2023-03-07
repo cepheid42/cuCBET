@@ -35,7 +35,26 @@ struct Beam2D : Manager {
 };
 
 template<typename T>
-__global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_managed>& beams, const devMatrix<2>& e_density) {
+__global__ void calc_grad_ne(devMatrix<2>& ne_grad, const devMatrix<2>& ne) {
+  
+  /*
+  * todo: gradient of electron density in x, y directions
+  */
+
+}
+
+template<typename T>
+hd void interp2D(...) {
+
+  /*
+  * todo: interpolate between 4 points
+  * https://en.wikipedia.org/wiki/Bilinear_interpolation~
+  */
+
+}
+
+template<typename T>
+__global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_managed>& beams, const devMatrix<2>& ne_grad) {
   auto beam_id = blockIdx.x;
   auto ray_id = threadIdx.x;
 
@@ -45,73 +64,56 @@ __global__ void launch_rays(const Parameters& params, const Beam2D<T, cuda_manag
   auto delta = (2.0 * bparams.radius) / (bparams.nrays - 1);
 
   auto radius = -bparams.radius + (ray_id * delta);
-  auto intensity = calculate_intensity<T>(radius, bparams.intensity, bparams.sigma);
+  auto init_intensity = calculate_intensity<T>(radius, bparams.intensity, bparams.sigma);
 
+  // Initial K-vector
+  vec2<T> kvec{bparams.b_norm[0], bparams.b_norm[1]};
 
-  vec2<T> ray_start{bparams.b_norm[0], bparams.b_norm[1]};
   // Beam 0 is x=0, Beam 1 is y=0
   ray_start[beam_id] += radius;
 
-  auto xi = get_node_index(ray_start[0], params.x[0], params.dx);
-  auto yi = get_node_index(ray_start[1], params.y[0], params.dy);
-
-  auto omega_p_sqr = (e_density(xi, yi) * SQR(Constants::qe)) / (Constants::EPS0 * Constants::Me);
-  auto k = sqrt(SQR(bparams.omega) - omega_p_sqr) / Constants::C0;
-
-  auto v_grp = -bparams.b_norm * (SQR(Constants::C0) * k) / bparams.omega;
-
-  auto grad_const = (params.dt * SQR(Constants::C0)) / (2.0 * params.n_crit);
-
+  // Initial position
   vec2<T> position{ray_start};
 
+  // Intermediate points for bezier construction
   vec2<T> onethird{};
   vec2<T> twothird{};
+  auto t13 = floor((1 / 3) * params.nt);
+  auto t23 = floor((2 / 3) * params.nt);
+
+  // Coefficients for various things
+  auto coef1 = -params.omega / (2.0 * params.n_crit);
+  auto coef2 = SQR(C) / params.omega;
+  
+  // Time step ray through domain
   for (uint32_t t = 0; t < params.nt; ++t) {
-    uint32_t xm, xp;
-    if (xi == 0) {
-      xm = 0;
-      xp = 1;
-    } else if (xi == e_density.dims[0] - 1) {
-      xm = e_density.dims[0] - 2;
-      xp = e_density.dims[0] - 1;
-    } else {
-      xm = xi - 1;
-      xp = xi;
-    }
+    // Calculate nearest nodes to ray position
+    auto xi = get_node_index(ray_start[0], params.x[0], params.dx);
+    auto yi = get_node_index(ray_start[1], params.y[0], params.dy);
 
-    uint32_t ym, yp;
-    if (yi == 0) {
-      ym = 0;
-      yp = 1;
-    } else if (yi == e_density.dims[1] - 1) {
-      ym = e_density.dims[1] - 2;
-      yp = e_density.dims[1] - 1;
-    } else {
-      ym = yi - 1;
-      yp = yi;
-    }
+    // Calculate k + dk
+    // ne_grad should be (dne_x, dne_y)
+    auto dk = coef1 * params.dt * ne_grad(xi, yi);
+    kvec += dk;
 
-    vec2<T> e_den_grad = {(e_density(xp, yi) - e_density(xm, yi)), (e_density(xi, yp) - e_density(xi, ym))};
-    e_den_grad *= grad_const;
+    // Calculate x + dx
+    auto dx = coef2 * kvec;
+    position += dx;
 
-    v_grp -= e_den_grad;
-
-    position += params.dt * v_grp;
-
-    auto ratio = T(t / params.nt);
-    if (abs(ratio - (1.0 / 3.0)) < 1.0E-7) {
+    // Save intermediate points at t = 1/3 and t = 2/3
+    if (t == t13) {
       onethird = position;
     }
-    if (abs(ratio - (2.0 / 3.0)) < 1.0E-7) {
+    if (t == t23) {
       twothird = position;
     }
   }
+
+  // Construct bezier curve
+  auto P1 = (1.0 / 6.0) * (18.0 * onethird - 9.0 * twothird - 5.0 * ray_start + 2.0 * position);
+  auto P2 = (1.0 / 6.0) * (-9.0 * onethird + 18.0 * twothird + 2.0 * ray_start - 5.0 * position);
+
+  beam.rays[ray_id] = {ray_start, P1, P2, position, intensity};
 }
-
-
-//template<typename T>
-//void Beam2D<T>::init_rays() {
-
-//}
 
 #endif //CUCBET_BEAM2D_CUH
