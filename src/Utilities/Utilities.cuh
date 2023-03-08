@@ -11,7 +11,7 @@
 //#include <chrono>
 
 // Utilities
-#include <cmath>
+//#include <cmath>
 //#include <algorithm>
 #include <cassert>
 
@@ -31,6 +31,8 @@
 // Aliases
 using FPTYPE = double;
 template<int DIM> using devMatrix = matrix_base<FPTYPE, DIM, cuda_managed>;
+template<int DIM> using devVector = matrix_base<vec2<FPTYPE>, DIM, cuda_managed>;
+
 
 //--------------------------------------------------
 // Constants

@@ -106,7 +106,7 @@ hd T dot(const vec2<T>& u, const vec2<T>& v) {
 // Printing Function
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const vec2<T>& dat) {
-  return (out << dat.e[0] << ' ' << dat.e[1]);
+  return (out << dat.e[0] << ", " << dat.e[1]);
 }
 
 #endif //CUCBET_vec2_CUH

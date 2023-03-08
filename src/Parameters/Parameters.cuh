@@ -14,8 +14,8 @@ struct BeamParams {
 };
 
 struct Parameters {
-  vec2<FPTYPE> x;
-  vec2<FPTYPE> y;
+  vec2<FPTYPE> xy_min;
+  vec2<FPTYPE> xy_max;
   FPTYPE CFL;
   FPTYPE dx;
   FPTYPE dy;

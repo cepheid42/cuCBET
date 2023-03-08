@@ -28,18 +28,6 @@ struct cuda_managed {
     cudaChk(cudaDeviceSynchronize())
     cudaChk(cudaFree(ptr))
   }
-
-  template<typename T>
-  void allocate_data(T* ptr, uint32_t len) {
-    cudaChk(cudaMallocManaged(&ptr, len * sizeof(T)))
-    cudaChk(cudaDeviceSynchronize())
-  }
-
-  template<typename T>
-  void deallocate_data(T* ptr) {
-    cudaChk(cudaDeviceSynchronize())
-    cudaChk(cudaFree(ptr))
-  }
 };
 
 struct cpu_managed {
@@ -52,15 +40,6 @@ struct cpu_managed {
   }
 
   void operator delete(void* ptr) { std::free(ptr); }
-
-  template<typename T>
-  void allocate_data(T* ptr, uint32_t len) {
-    ptr = new T[len];
-    assert(ptr != nullptr);
-  }
-
-  template<typename T>
-  void deallocate_data(T* ptr) { delete[] ptr; }
 };
 
 /****************************************/
@@ -76,11 +55,25 @@ struct matrix_base : public Manager {
   constexpr explicit matrix_base(const Args... na) : nDims{DIM}, dims{uint32_t(na)...} {
     static_assert(sizeof...(na) == DIM);
     size = dims[0];
+
     for(uint32_t i = 1; i < DIM; i++) { size *= dims[i]; }
-    Manager::allocate_data(data, size);
+
+    if constexpr(std::is_same<Manager, cpu_managed>::value) {
+      data = new T[size];
+    } else {
+      cudaChk(cudaMallocManaged(&data, size * sizeof(T)))
+      cudaChk(cudaDeviceSynchronize())
+    }
   }
 
-  ~matrix_base() { Manager::deallocate_data(data); }
+  ~matrix_base() {
+    if constexpr(std::is_same<Manager, cpu_managed>::value) {
+      delete[] data;
+    } else {
+      cudaChk(cudaDeviceSynchronize())
+      cudaChk(cudaFree(data))
+    }
+  }
 
   template<typename... Args>
   hd uint32_t get_index(const Args... idx) const {
