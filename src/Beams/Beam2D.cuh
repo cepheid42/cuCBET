@@ -56,6 +56,10 @@ __global__ void launch_rays(const Parameters& params, Beam2D<FPTYPE, cuda_manage
   auto init_intensity = calculate_intensity(radius, bparams.intensity, bparams.sigma);
 
   // Initial position and k-vector
+  /*
+   * todo: I think the rays aren't starting in the right spot, among other things.
+   *       Ray start is not bnorm, but rather bnorm * radius from center.
+   */
   vec2<FPTYPE> ray_start{bparams.b_norm[0], bparams.b_norm[1]};
   vec2<FPTYPE> kvec{bparams.b_norm[0], bparams.b_norm[1]};
 
