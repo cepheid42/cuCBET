@@ -42,8 +42,8 @@ namespace Constants {
   inline constexpr FPTYPE   C0 { 299792458.0 };    // m/s
   inline constexpr FPTYPE EPS0 { 8.854187E-12 };   // F/m
   inline constexpr FPTYPE  MU0 { 1.256637E-6 };    // H/m
-  inline constexpr FPTYPE   Me { 9.10938356E-28 }; // electron mass, kg
-  inline constexpr FPTYPE   qe { 1.6021766E-19 };  // electron charge, coulombs
+  inline constexpr FPTYPE   Me { 9.10938370E-31 }; // electron mass, kg
+  inline constexpr FPTYPE   qe { -1.6021766E-19 }; // electron charge, coulombs
   inline constexpr FPTYPE   Kb { 1.38-649E-23 };   // J/K
 }
 
