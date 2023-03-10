@@ -1,13 +1,14 @@
 cmake-build-debug
 .vscode/
+.fleet/
 .idea/
 .ipynb_checkpoints/
+CMakeFiles/
+Makefile/
 
-IntpBilinear2.h
-IntpLinearNonuniform2.h
-IntpTrilinear3.h
+cmake_install.cmake
 
-outputs
+outputs/
 
 *.gif
 *.mp4

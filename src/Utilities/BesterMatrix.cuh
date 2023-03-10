@@ -80,11 +80,9 @@ struct matrix_base : public Manager {
     // Compute linear index from N-dimension input indices
     static_assert(sizeof...(idx) == DIM);
     uint32_t indices[DIM] = {uint32_t(idx)...};
-    uint32_t global_index = 0;
-    for(uint32_t i = 0; i < DIM; i++) {
-      auto val = indices[i];
-      for(uint32_t j = i + 1; j < DIM; j++) { val *= dims[j]; }
-      global_index += val;
+    uint32_t global_index = indices[0];
+    for (int i = 1; i < DIM; ++i) {
+      global_index = indices[i] + dims[i] * global_index;
     }
     return global_index;
   }
