@@ -4,7 +4,7 @@
 #include "../Utilities/Utilities.cuh"
 
 hd vec2<FPTYPE> interp2D(const devVector<2>& data,
-                         const vec2<FPTYPE>& point,
+                         const vec2<FPTYPE> point,
                          const vec2<FPTYPE> mins,
                          FPTYPE dx, FPTYPE dy)
 {
@@ -14,8 +14,8 @@ hd vec2<FPTYPE> interp2D(const devVector<2>& data,
   auto i = floor(m);
   auto j = floor(n);
 
-  auto alpha = m - i;
-  auto beta = n - j;
+  auto alpha = (m - i) * dx;
+  auto beta = (n - j) * dy;
 
   i = static_cast<uint32_t>(i);
   j = static_cast<uint32_t>(i);

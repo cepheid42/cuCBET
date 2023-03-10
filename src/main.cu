@@ -17,8 +17,6 @@ int main() {
   uint32_t nx = 100;
   uint32_t ny = 100;
 
-  uint32_t num_beams = 2;
-
   vec2<FPTYPE> xy_min{-5.0E-6, -5.0E-6}; // xmin and ymin in m
   vec2<FPTYPE> xy_max{5.0E-6, 5.0E-6}; // xmax and ymax in m
 
@@ -35,8 +33,8 @@ int main() {
 
   auto ncrit = (SQR(beam_omega) * Constants::Me * Constants::EPS0) / SQR(Constants::qe); // 9.047E+27 m^-3
 
-  vec2<FPTYPE> beam0_norm{0.0, 1.0};
-  vec2<FPTYPE> beam1_norm{1.0, 0.0};
+  vec2<FPTYPE> beam0_norm{1.0, 0.0};
+  vec2<FPTYPE> beam1_norm{0.0, 1.0};
 
   auto beam_radius = 2.0E-6; // meters
   auto beam_sigma = 1.7E-6;  // meters
@@ -47,43 +45,26 @@ int main() {
   BeamParams bp0{beam0_norm, beam_radius, beam_sigma, beam_intensity, beam_omega, beam_nrays};
   BeamParams bp1{beam1_norm, beam_radius, beam_sigma, beam_intensity, beam_omega, beam_nrays};
 
-//  auto beam0 = new devBeam(bp0, 0);
-//  auto beam1 = new devBeam(bp1, 1);
+  auto beam0 = new devBeam(bp0, 0);
+  auto beam1 = new devBeam(bp1, 1);
 
   auto ne_over_nc = new devMatrix<2>(nx, ny);
-  linear_electron_density_x<<<nx, ny>>>(*ne_over_nc, 0.3, 0.1);
-  cudaChk(cudaDeviceSynchronize())
-
-//  for (uint32_t i = 0; i < nx; i++) {
-//    for (uint32_t j = 0; j < ny; j++) {
-//      std::cout << (*ne)(i, j) << ", ";
-//    }
-//    std::cout << '\n';
-//  }
+  linear_electron_density_x(*ne_over_nc, 0.3, 0.1);
 
   auto ne_grad = new devVector<2>(nx, ny);
-  gradient2D<<<nx, ny>>>(*ne_grad, *ne_over_nc, dx, dy);
-  cudaChk(cudaDeviceSynchronize())
-
-  std::cout << '\n';
-  for (uint32_t i = 0; i < nx; i++) {
-    for (uint32_t j = 0; j < ny; j++) {
-      std::cout << (*ne_grad)(i, j)[1] << ", ";
-    }
-    std::cout << '\n';
-  }
+  gradient2D(*ne_grad, *ne_over_nc, dx, dy);
 
 //  launch_rays<<<1, beam_nrays>>>(params, *beam0, *ne_grad);
-//  launch_rays<<<1, beam_nrays>>>(params, *beam1, *ne_grad);
-//  cudaChk(cudaDeviceSynchronize())
-//
-//  output_beam(params, *beam0);
-//  output_beam(params, *beam1);
-//
-//  delete ne;
-//  delete ne_grad;
-//  delete beam0;
-//  delete beam1;
+  launch_rays<<<1, beam_nrays>>>(params, *beam1, *ne_grad);
+  cudaChk(cudaDeviceSynchronize())
+
+  output_beam(params, *beam0);
+  output_beam(params, *beam1);
+
+  delete ne_over_nc;
+  delete ne_grad;
+  delete beam0;
+  delete beam1;
 
   return 0;
 }
