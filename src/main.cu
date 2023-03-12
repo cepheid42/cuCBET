@@ -33,8 +33,8 @@ int main() {
 
   auto ncrit = (SQR(beam_omega) * Constants::Me * Constants::EPS0) / SQR(Constants::qe); // 9.047E+27 m^-3
 
-  vec2<FPTYPE> beam0_norm{1.0, 0.0};
-  vec2<FPTYPE> beam1_norm{0.0, 1.0};
+  vec2<FPTYPE> beam0_norm{0.0, 1.0};
+  vec2<FPTYPE> beam1_norm{1.0, 0.0};
 
   auto beam_radius = 2.0E-6; // meters
   auto beam_sigma = 1.7E-6;  // meters

@@ -12,31 +12,7 @@ float calc_intensity(float I0, float r, float w) {
 }
 
 struct Beam {
-  uint32_t ID;
-  vec3 b_norm;
-  float b_dist;
-  float b_radius;
-  float b_sigma;
-  float I0;
-  int nRays;
-  Ray* rays;
 
-  Beam(uint32_t ID, vec3 b_norm, float dist, float r, float sigma, float I0)
-  : ID(ID), b_norm(b_norm), b_dist(dist), b_radius(r), b_sigma(sigma), I0(I0), nRays(128)
-  {
-    // Initialize rays
-    cudaChk(cudaMallocManaged(&rays, nRays * sizeof(Ray)))
-    cudaChk(cudaDeviceSynchronize())
-
-    init_rays();    
-  }
-
-  ~Beam() {
-    cudaChk(cudaDeviceSynchronize())
-    cudaChk(cudaFree(rays))
-  }
-
-  void init_rays();
 };
 
 void Beam::init_rays() {
@@ -78,40 +54,5 @@ void Beam::init_rays() {
   assert(raycount == nRays);
 }
 
-template<typename T = float>
-std::vector<Vector3<T>> load_beam_normals(const std::string& filename) {
-  std::vector<Vector3<T>> beam_normals;
-
-  std::ifstream file(filename);
-  std::string line;
-
-  while(std::getline(file, line)) {
-    Vector3<T> bnorm;
-    std::stringstream lineStream(line);
-
-    for (auto i = 0; i < 3; i++) {
-      lineStream >> bnorm[i];
-    }
-    beam_normals.push_back(bnorm);
-  }
-  
-  return beam_normals;
-}
-
-// void beam_to_csv(Beam& b, const std::string& filename, int cutoff = 0) {
-//   std::ofstream file(filename);
-
-//   cutoff = std::max(cutoff, b.nRays);
-
-//   auto nt = 4;
-//   auto dt = 1.0 / static_cast<float>(nt - 1);
-
-//   for (auto i = 0; i < cutoff; i++) {      
-//     Vector3<float> p1 = b.rays[i].eval(0.0);
-//     Vector3<float> p2 = b.rays[i].eval(0.5);
-//     Vector3<float> p3 = b.rays[i].eval(1.0);
-//     file << p1 << '\n' << p2 << '\n' << p3 << '\n';
-//   }
-// }
 
 #endif //CBET_BEAMS_CUH
