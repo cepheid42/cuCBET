@@ -7,7 +7,7 @@ void linear_electron_density_x(devMatrix<2>& eden, FPTYPE eden_max, FPTYPE eden_
   auto step = (eden_max - eden_min) / (eden.dims[0] - 1);
   for (uint32_t i = 0; i < eden.dims[0]; i++) {
     for (uint32_t j = 0; j < eden.dims[1]; j++) {
-      eden(i, j) = eden_min + i * step;
+      eden(i, j) = eden_min + FPTYPE(i) * step;
     }
   }
 }

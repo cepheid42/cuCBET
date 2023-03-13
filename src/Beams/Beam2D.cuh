@@ -18,12 +18,11 @@ template<typename T, class Manager>
 struct Beam2D : Manager {
   uint32_t ID;
   BeamParams params;
-  Ray2D<T>* rays;
+  Ray2D<T> *rays;
 
-  Beam2D(const BeamParams& _params, uint32_t _id)
-  : ID(_id), params(_params)
-  {
-    if constexpr(std::is_same<Manager, cpu_managed>::value) {
+  Beam2D(const BeamParams &_params, uint32_t _id)
+    : ID(_id), params(_params) {
+    if constexpr (std::is_same<Manager, cpu_managed>::value) {
       rays = new Ray2D<T>[params.nrays];
     } else {
       cudaChk(cudaMallocManaged(&rays, params.nrays * sizeof(Ray2D<T>)))
@@ -32,7 +31,7 @@ struct Beam2D : Manager {
   }
 
   ~Beam2D() {
-    if constexpr(std::is_same<Manager, cpu_managed>::value) {
+    if constexpr (std::is_same<Manager, cpu_managed>::value) {
       delete[] rays;
     } else {
       cudaChk(cudaDeviceSynchronize())
@@ -41,7 +40,7 @@ struct Beam2D : Manager {
   }
 };
 
-__global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed>& beam, const devVector<2>& ne_grad) {
+__global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed> &beam, const devVector<2> &ne_grad) {
   auto ray_id = threadIdx.x;
   auto bparams = beam.params;
 
@@ -52,15 +51,16 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
   vec2<FPTYPE> ray_start{bparams.b_norm[0] * params.xy_min[0],
                          bparams.b_norm[1] * params.xy_min[1]};
 
+  vec2<FPTYPE> kvec = {-ray_start[0], -ray_start[1]};
+
   // Beam 0 increments y-dir, Beam 1 increments x-dir
-  ray_start[beam.ID] = -bparams.radius + (ray_id * delta);
+  auto roll = (beam.ID + 1) % 2;
+  ray_start[roll] = -bparams.radius + (ray_id * delta);
 
   auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
 
-  vec2<FPTYPE> kvec{ray_start};
-
   // Initial ray_end point
-  vec2<FPTYPE> ray_end{ray_start};
+  vec2<FPTYPE> ray_end = {ray_start[0], ray_start[1]};
 
   // Intermediate points for bezier construction
   vec2<FPTYPE> onethird{};
@@ -77,24 +77,21 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
     // Calculate k + dk
     // interpolate gradient of ne
     auto dk = coef1 * interp2D(ne_grad, ray_end, params.xy_min, params.dx, params.dy);
-    
-    if (ray_id == 0) {
-      printf("%E\n", dk);
+    kvec -= dk;
+
+    // Calculate x + dx
+    auto dx = coef2 * kvec;
+    ray_end += dx;
+
+    // Save intermediate points at t = 1/3 and t = 2/3
+    if (t == t13) {
+      onethird[0] = ray_end[0];
+      onethird[1] = ray_end[1];
     }
-
-    // kvec += dk;
-
-    // // Calculate x + dx
-    // auto dx = coef2 * kvec;
-    // ray_end += dx;
-
-    // // Save intermediate points at t = 1/3 and t = 2/3
-    // if (t == t13) {
-    //   onethird = ray_end;
-    // }
-    // if (t == t23) {
-    //   twothird = ray_end;
-    // }
+    if (t == t23) {
+      twothird[0] = ray_end[0];
+      twothird[1] = ray_end[1];
+    }
   }
 
   // Construct bezier curve

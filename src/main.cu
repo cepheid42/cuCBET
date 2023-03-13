@@ -25,7 +25,7 @@ int main() {
 
   auto cfl = 1.0 / sqrt(2.0);
 
-  auto nt = static_cast<uint32_t>(FPTYPE(nx) / cfl);
+  auto nt = static_cast<uint32_t>(FPTYPE(2 * nx) / cfl);
   auto dt = (cfl * dx) / Constants::C0;
 
   FPTYPE lambda = 3.51E-7; // meters
@@ -33,8 +33,8 @@ int main() {
 
   auto ncrit = (SQR(beam_omega) * Constants::Me * Constants::EPS0) / SQR(Constants::qe); // 9.047E+27 m^-3
 
-  vec2<FPTYPE> beam0_norm{0.0, 1.0};
-  vec2<FPTYPE> beam1_norm{1.0, 0.0};
+  vec2<FPTYPE> beam0_norm{1.0, 0.0};
+  vec2<FPTYPE> beam1_norm{0.0, 1.0};
 
   auto beam_radius = 2.0E-6; // meters
   auto beam_sigma = 1.7E-6;  // meters
@@ -54,12 +54,12 @@ int main() {
   auto ne_grad = new devVector<2>(nx, ny);
   gradient2D(*ne_grad, *ne_over_nc, dx, dy);
 
-//  launch_rays<<<1, beam_nrays>>>(params, *beam0, *ne_grad);
-  launch_rays<<<1, beam_nrays>>>(params, *beam1, *ne_grad);
+  launch_rays<<<1, beam_nrays>>>(params, *beam0, *ne_grad);
+//  launch_rays<<<1, beam_nrays>>>(params, *beam1, *ne_grad);
   cudaChk(cudaDeviceSynchronize())
 
   output_beam(params, *beam0);
-  output_beam(params, *beam1);
+//  output_beam(params, *beam1);
 
   delete ne_over_nc;
   delete ne_grad;
