@@ -59,7 +59,7 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
 
   vec2<FPTYPE> kvec{ray_start};
 
-  // Initial ray_end point~
+  // Initial ray_end point
   vec2<FPTYPE> ray_end{ray_start};
 
   // Intermediate points for bezier construction
@@ -77,19 +77,24 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
     // Calculate k + dk
     // interpolate gradient of ne
     auto dk = coef1 * interp2D(ne_grad, ray_end, params.xy_min, params.dx, params.dy);
-    kvec += dk;
-
-    // Calculate x + dx
-    auto dx = coef2 * kvec;
-    ray_end += dx;
-
-    // Save intermediate points at t = 1/3 and t = 2/3
-    if (t == t13) {
-      onethird = ray_end;
+    
+    if (ray_id == 0) {
+      printf("%E\n", dk);
     }
-    if (t == t23) {
-      twothird = ray_end;
-    }
+
+    // kvec += dk;
+
+    // // Calculate x + dx
+    // auto dx = coef2 * kvec;
+    // ray_end += dx;
+
+    // // Save intermediate points at t = 1/3 and t = 2/3
+    // if (t == t13) {
+    //   onethird = ray_end;
+    // }
+    // if (t == t23) {
+    //   twothird = ray_end;
+    // }
   }
 
   // Construct bezier curve
