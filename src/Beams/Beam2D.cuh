@@ -46,21 +46,24 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
 
   auto delta = (2.0 * bparams.radius) / (bparams.nrays - 1);
 
-
-  // Initial position and k-vector
+  // Initial position
   vec2<FPTYPE> ray_start{bparams.b_norm[0] * params.xy_min[0],
                          bparams.b_norm[1] * params.xy_min[1]};
-
-  vec2<FPTYPE> kvec = {-ray_start[0], -ray_start[1]};
 
   // Beam 0 increments y-dir, Beam 1 increments x-dir
   auto roll = (beam.ID + 1) % 2;
   ray_start[roll] = -bparams.radius + (ray_id * delta);
 
-  auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
+  // auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
 
   // Initial ray_end point
-  vec2<FPTYPE> ray_end = {ray_start[0], ray_start[1]};
+  vec2<FPTYPE> ray_end = ray_start;
+
+  // Calculate k vector
+  // auto k0 = bparams.omega / Constants::C0;
+  // vec2<FPTYPE> kvec = k0 * bparams.b_norm;
+  auto wp2 = (ne_grad() * SQR(Constants::qe)) / (Constants::EPS0 * Constants::Me);
+  auto k0 = sqrt((SQR(bparams.omega) - wp2) / Constants::C0);
 
   // Intermediate points for bezier construction
   vec2<FPTYPE> onethird{};
@@ -85,12 +88,14 @@ __global__ void launch_rays(const Parameters params, Beam2D<FPTYPE, cuda_managed
 
     // Save intermediate points at t = 1/3 and t = 2/3
     if (t == t13) {
-      onethird[0] = ray_end[0];
-      onethird[1] = ray_end[1];
+      onethird = ray_end;
+      // onethird[0] = ray_end[0];
+      // onethird[1] = ray_end[1];
     }
     if (t == t23) {
-      twothird[0] = ray_end[0];
-      twothird[1] = ray_end[1];
+      twothird = ray_end;
+      // twothird[0] = ray_end[0];
+      // twothird[1] = ray_end[1];
     }
   }
 

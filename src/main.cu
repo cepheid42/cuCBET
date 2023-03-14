@@ -31,7 +31,7 @@ int main() {
   FPTYPE lambda = 3.51E-7; // meters
   auto beam_omega = 2.0 * Constants::PI * (Constants::C0 / lambda); // 5.366E+15 s^-1
 
-  auto ncrit = (SQR(beam_omega) * Constants::Me * Constants::EPS0) / SQR(Constants::qe); // 9.047E+27 m^-3
+  // auto ncrit = (SQR(beam_omega) * Constants::Me * Constants::EPS0) / SQR(Constants::qe); // 9.047E+27 m^-3
 
   vec2<FPTYPE> beam0_norm{1.0, 0.0};
   vec2<FPTYPE> beam1_norm{0.0, 1.0};
