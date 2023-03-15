@@ -40,6 +40,11 @@ struct Beam2D : Manager {
   }
 };
 
+struct ray_record {
+  FPTYPE x, y;
+  uint32_t t;
+};
+
 __global__ void launch_rays(const Parameters params,
                             Beam2D<FPTYPE, cuda_managed>& beam,
                             const devMatrix<2>& eps,
@@ -65,18 +70,18 @@ __global__ void launch_rays(const Parameters params,
   auto roll = (beam.ID + 1) % 2;
   ray_start[roll] = -bparams.radius + (ray_id * ray_delta);
 
-  auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
-
   // Initial ray_end point
   vec2<FPTYPE> ray_end{ray_start};
 
-  // Intermediate points for bezier construction
-  vec2<FPTYPE> onethird{};
-  vec2<FPTYPE> twothird{};
-  auto t13 = floor(FPTYPE(params.nt) / 3.0);
-  auto t23 = floor(FPTYPE(2 * params.nt) / 3.0);
+  auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
+
 
   auto dtau = Constants::C0 * params.dt;
+
+  auto sample_size = params.nt / 10;
+  auto records = new ray_record[sample_size];
+  auto rec_num = 0;
+  uint32_t total_t;
 
   // Time step ray through domain
   for (uint32_t t = 0; t < params.nt; ++t) {
@@ -90,19 +95,23 @@ __global__ void launch_rays(const Parameters params,
     auto dx = dtau * kvec;
     ray_end += dx;
 
-    // Save intermediate points at t = 1/3 and t = 2/3
-    if (t == t13) {
-      onethird = ray_end;
-    }
-    if (t == t23) {
-      twothird = ray_end;
+    if (t % 10 == 0) {
+      records[rec_num] = {ray_end[0], ray_end[1], t};
+      rec_num++;
     }
 
-//    if (ray_end[0] >= params.xy_max[0] || ray_end[1] >= params.xy_max[1]) {
-//      break;
-//    }
+    if (ray_end[0] >= params.xy_max[0] || ray_end[1] >= params.xy_max[1]) {
+      total_t = t;
+      break;
+    }
   }
 
+  auto onet = rec_num / 3;
+  auto twot = 2 * onet;
+
+  auto onethird = vec2<FPTYPE>{records[onet].x, records[onet].y};
+  auto twothird = vec2<FPTYPE>{records[twot].x, records[twot].y};
+  
   // Construct bezier curve
   auto P1 = (1.0 / 6.0) * (18.0 * onethird - 9.0 * twothird - 5.0 * ray_start + 2.0 * ray_end);
   auto P2 = (1.0 / 6.0) * (-9.0 * onethird + 18.0 * twothird + 2.0 * ray_start - 5.0 * ray_end);
