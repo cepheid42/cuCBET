@@ -48,21 +48,23 @@ int main() {
   auto beam0 = new devBeam(bp0, 0);
   auto beam1 = new devBeam(bp1, 1);
 
-  auto ne_over_nc = new devMatrix<2>(nx, ny);
-  linear_electron_density_x(*ne_over_nc, 0.3, 0.1);
+  // Permitivitty epsilon = 1 - ne/nc
+  // index of refraction = sqrt(epsilon)
+  auto eps = new devMatrix<2>(nx, ny);
+  linear_permittivity_x(*eps, 0.1, 0.3);
 
-  auto ne_grad = new devVector<2>(nx, ny);
-  gradient2D(*ne_grad, *ne_over_nc, dx, dy);
+  auto eps_grad = new devVector<2>(nx, ny);
+  gradient2D(*eps_grad, *eps, dx, dy);
 
-  launch_rays<<<1, beam_nrays>>>(params, *beam0, *ne_grad);
-//  launch_rays<<<1, beam_nrays>>>(params, *beam1, *ne_grad);
+  launch_rays<<<1, beam_nrays>>>(params, *beam0, *eps, *eps_grad);
+  launch_rays<<<1, beam_nrays>>>(params, *beam1, *eps, *eps_grad);
   cudaChk(cudaDeviceSynchronize())
 
   output_beam(params, *beam0);
-//  output_beam(params, *beam1);
+  output_beam(params, *beam1);
 
-  delete ne_over_nc;
-  delete ne_grad;
+  delete eps;
+  delete eps_grad;
   delete beam0;
   delete beam1;
 

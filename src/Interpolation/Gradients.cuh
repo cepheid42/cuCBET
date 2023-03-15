@@ -3,11 +3,13 @@
 
 #include "../Utilities/Utilities.cuh"
 
-void linear_electron_density_x(devMatrix<2>& eden, FPTYPE eden_max, FPTYPE eden_min) {
-  auto step = (eden_max - eden_min) / (eden.dims[0] - 1);
-  for (uint32_t i = 0; i < eden.dims[0]; i++) {
-    for (uint32_t j = 0; j < eden.dims[1]; j++) {
-      eden(i, j) = eden_min + FPTYPE(i) * step;
+void linear_permittivity_x(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max) {
+  // Fills epsilon = 1 - ne(x)/nc
+  // ne is a function of x, and is constant in y
+  auto step = (eden_max - eden_min) / (eps.dims[0] - 1);
+  for (uint32_t i = 0; i < eps.dims[0]; i++) {
+    for (uint32_t j = 0; j < eps.dims[1]; j++) {
+      eps(i, j) = 1.0 - (eden_min + FPTYPE(i) * step);
     }
   }
 }
@@ -93,6 +95,9 @@ void gradient2D(devVector<2>& out, const devMatrix<2>& in, FPTYPE dx, FPTYPE dy)
       out(i, j) = {x_val, y_val};
     }
   }
+
+  delete[] xderiv;
+  delete[] yderiv;
 }
 
 
