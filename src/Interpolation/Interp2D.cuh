@@ -14,6 +14,8 @@ hd vec2<FPTYPE> interp2D(const devVector<2>& data,
   auto i = floor(m);
   auto j = floor(n);
 
+  assert(i < data.dims[0] && j < data.dims[1]);
+
   auto alpha = (m - i);
   auto beta = (n - j);
 
