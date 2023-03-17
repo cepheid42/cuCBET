@@ -53,6 +53,7 @@ __global__ void launch_rays(const Parameters params,
   auto ray_id = threadIdx.x;
   auto bparams = beam.params;
 
+  auto dtau = Constants::C0 * params.dt;
   auto ray_delta = (2.0 * bparams.radius) / (bparams.nrays - 1);
 
   // Initial position and k-vector
@@ -75,13 +76,11 @@ __global__ void launch_rays(const Parameters params,
 
   auto init_intensity = calculate_intensity(ray_start[beam.ID], bparams.intensity, bparams.sigma);
 
-
-  auto dtau = Constants::C0 * params.dt;
-
-  auto sample_size = params.nt / 10;
-  auto records = new ray_record[sample_size];
-  auto rec_num = 0;
-  uint32_t total_t;
+  // Ray record keeping for computing points at end
+  ray_record records[28];
+  auto counter = 0;
+  uint32_t total_count = 0;
+  auto num_steps_per_save = params.nt / 28;
 
   // Time step ray through domain
   for (uint32_t t = 0; t < params.nt; ++t) {
@@ -95,26 +94,34 @@ __global__ void launch_rays(const Parameters params,
     auto dx = dtau * kvec;
     ray_end += dx;
 
-    if (t % 10 == 0) {
-      records[rec_num] = {ray_end[0], ray_end[1], t};
-      rec_num++;
+    if (ray_end[0] >= params.xy_max[0] || ray_end[1] >= params.xy_max[1]) {
+      total_count = t;
+      break;
     }
 
-    if (ray_end[0] >= params.xy_max[0] || ray_end[1] >= params.xy_max[1]) {
-      total_t = t;
-      break;
+    if (t % num_steps_per_save == 0 && t != 0) {
+      records[counter] = {ray_end[0], ray_end[1], t};
+      counter++;
     }
   }
 
-  auto onet = rec_num / 3;
-  auto twot = 2 * onet;
+  auto first = counter / 3;
+  auto second = (2 * counter) / 3;
 
-  auto onethird = vec2<FPTYPE>{records[onet].x, records[onet].y};
-  auto twothird = vec2<FPTYPE>{records[twot].x, records[twot].y};
-  
-  // Construct bezier curve
-  auto P1 = (1.0 / 6.0) * (18.0 * onethird - 9.0 * twothird - 5.0 * ray_start + 2.0 * ray_end);
-  auto P2 = (1.0 / 6.0) * (-9.0 * onethird + 18.0 * twothird + 2.0 * ray_start - 5.0 * ray_end);
+  auto t_one = FPTYPE(records[first].t) / FPTYPE(total_count);
+  auto t_two = FPTYPE(records[second].t) / FPTYPE(total_count);
+
+  auto A1 = vec2<FPTYPE>{records[first].x, records[first].y};
+  auto A2 = vec2<FPTYPE>{records[second].x, records[second].y};
+
+  auto alpha1 = 3.0 * SQR(1.0 - t_one);
+  auto alpha2 = 3.0 * SQR(1.0 - t_two);
+
+  auto c1 = A1 - CUBE(1.0 - t_one) * ray_start - CUBE(t_one) * ray_end;
+  auto c2 = A2 - CUBE(1.0 - t_two) * ray_start - CUBE(t_two) * ray_end;
+
+  auto P2 = (c2 - ((alpha2 * t_two) / (alpha1 * t_one)) * c1) / (alpha2 * (SQR(t_two) - t_one * t_two));
+  auto P1 = (c1 / (alpha1 * t_one)) - t_one * P2;
 
   beam.rays[ray_id] = {ray_start, P1, P2, ray_end, init_intensity};
 }
