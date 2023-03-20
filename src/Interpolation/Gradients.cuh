@@ -14,6 +14,46 @@ void linear_permittivity_x(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max) 
   }
 }
 
+void bilin_permittivity(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max, FPTYPE dx, FPTYPE dy) {
+  auto step = (eden_max - eden_min) / (eps.dims[0] - 1);
+  for (uint32_t i = 0; i < eps.dims[0]; i++) {
+    for (uint32_t j = 0; j < eps.dims[1]; j++) {
+      auto xpart = (i / eps.dims[0]);
+      auto ypart = (j / eps.dims[1]);
+      eps(i, j) = 1.0 - (eden_min + step * (xpart + ypart));
+    }
+  }
+}
+
+void radial_permittivity(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max, FPTYPE dx, FPTYPE dy) {
+  // Fills epsilon = 1 - ne(x)/nc
+  // ne is a function of x, and is constant in y
+  auto c_radius = SQR(0.25E-6);
+
+  auto step = (eden_max - eden_min) / (eps.dims[0] - 1);
+  for (uint32_t i = 0; i < eps.dims[0]; i++) {
+    for (uint32_t j = 0; j < eps.dims[1]; j++) {
+
+      auto r = SQR(i * dx - 5.0E-6) + SQR(j * dy - 5.0E-6);
+
+      eps(i, j) = 1.0 - (c_radius / r);
+      if (r <= c_radius) {
+        eps(i, j) = 0.0;
+      }
+    }
+  }
+}
+
+//__global__ void gpu_linear_permittivity_x(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max) {
+//  auto i = blockIdx.x;
+//  auto j = threadIdx.x;
+//
+//  // Fills epsilon = 1 - ne(x)/nc
+//  // ne is a function of x, and is constant in y
+//  auto step = (eden_max - eden_min) / (eps.dims[0] - 1);
+//  eps(i, j) = 1.0 - (eden_min + FPTYPE(i) * step);
+//}
+
 void gradient2D(devVector<2>& out, const devMatrix<2>& in, FPTYPE dx, FPTYPE dy) {
   auto EPSILON = std::numeric_limits<FPTYPE>::epsilon();
 

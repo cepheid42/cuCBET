@@ -1,21 +1,32 @@
 #include "Utilities/Utilities.cuh"
 #include "Interpolation/Gradients.cuh"
 #include "Beams/Beam2D.cuh"
+#include "Utilities/Timing.cuh"
 
-using devBeam = Beam2D<FPTYPE, cuda_managed>;
+using devBeam = matrix_base<Beam2D<FPTYPE, cuda_managed>, 1, cuda_managed>;
 
-void output_beam(Parameters& params, devBeam& beam) {
-  std::ofstream file("./outputs/beam_" + std::to_string(beam.ID) + ".csv");
-  file << std::fixed << std::setprecision(std::numeric_limits<FPTYPE>::max_digits10);
-  for (uint32_t r = 0; r < beam.params.nrays; ++r) {
-    auto ray = beam.rays[r];
-    file << ray.controls[0] << ", " << ray.controls[1] << ", " << ray.controls[2] << ", " << ray.controls[3] << '\n';
+void output_beam(Parameters& params, devBeam& beams) {
+  for (uint32_t b = 0; b < beams.dims[0]; b++) {
+    std::ofstream file("./outputs/beam_" + std::to_string(beams(b).ID) + ".csv");
+    file << std::fixed << std::setprecision(std::numeric_limits<FPTYPE>::max_digits10);
+    for (uint32_t r = 0; r < beams(b).params.nrays; ++r) {
+      auto ray = beams(b).rays[r];
+      file << ray.controls[0] << ", " << ray.controls[1] << ", " << ray.controls[2] << ", " << ray.controls[3] << '\n';
+    }
   }
 }
 
+
 int main() {
-  uint32_t nx = 100;
-  uint32_t ny = 100;
+  cpuTimer host_timer;
+  host_timer.start();
+
+  cudaTimer dev_timer;
+
+  uint32_t nx = 400;
+  uint32_t ny = 400;
+//  uint32_t nx = 20;
+//  uint32_t ny = 20;
 
   vec2<FPTYPE> xy_min{-5.0E-6, -5.0E-6}; // xmin and ymin in m
   vec2<FPTYPE> xy_max{5.0E-6, 5.0E-6}; // xmax and ymax in m
@@ -45,28 +56,45 @@ int main() {
   BeamParams bp0{beam0_norm, beam_radius, beam_sigma, beam_intensity, beam_omega, beam_nrays};
   BeamParams bp1{beam1_norm, beam_radius, beam_sigma, beam_intensity, beam_omega, beam_nrays};
 
-  auto beam0 = new devBeam(bp0, 0);
-  auto beam1 = new devBeam(bp1, 1);
+  auto beams = new devBeam(2);
+  (*beams)(0) = {bp0, 0};
+  (*beams)(1) = {bp1, 1};
 
   // Permitivitty epsilon = 1 - ne/nc
   // index of refraction = sqrt(epsilon)
   auto eps = new devMatrix<2>(nx, ny);
-  linear_permittivity_x(*eps, 0.1, 0.3);
+//  linear_permittivity_x(*eps, 0.5, 0.999);
+  bilin_permittivity(*eps, 0.1, 1.0, dx, dy);
+//  radial_permittivity(*eps, 0.1, 1.0, dx, dy);
+
+//  for (uint32_t i = 0; i < nx; ++i) {
+//    std::cout << (*eps)(i, 99) << " ";
+//  }
+//  std::cout << std::endl;
 
   auto eps_grad = new devVector<2>(nx, ny);
   gradient2D(*eps_grad, *eps, dx, dy);
 
-  launch_rays<<<1, beam_nrays>>>(params, *beam0, *eps, *eps_grad);
-  launch_rays<<<1, beam_nrays>>>(params, *beam1, *eps, *eps_grad);
+  dev_timer.start();
+
+  launch_rays<<<2, beam_nrays>>>(params, *beams, *eps, *eps_grad);
   cudaChk(cudaDeviceSynchronize())
 
-  output_beam(params, *beam0);
-  output_beam(params, *beam1);
+  dev_timer.stop();
+  auto gpu_time = dev_timer.elapsed() / 1000.0;
+
+  output_beam(params, *beams);
 
   delete eps;
   delete eps_grad;
-  delete beam0;
-  delete beam1;
+  delete beams;
+
+  host_timer.stop();
+  auto total_time = host_timer.elapsed() / 1000.0;
+
+  std::cout << "Beams/Rays:    " << 2 * beam_nrays << " (" << 2 << "/" << beam_nrays << ")" << std::endl;
+  std::cout << "GPU runtime:   " << gpu_time << std::endl;
+  std::cout << "Total runtime: " << total_time << std::endl;
 
   return 0;
 }

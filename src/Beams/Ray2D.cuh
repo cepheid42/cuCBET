@@ -33,10 +33,6 @@ struct Ray2D {
     auto P2 = controls[3] - controls[2];
     return (3.0 * SQR(omt) * P0) + (6.0 * t * omt * P1) + (3.0 * SQR(t) * P2);
   }
-
-  hd void update_control(const uint32_t ctrl_id, const vec2<T>& newP) {
-    controls[ctrl_id] = {newP[0], newP[1]};
-  }
 };
 
 #endif //CUCBET_RAY2D_CUH
