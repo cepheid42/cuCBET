@@ -67,10 +67,6 @@ int main() {
   bilin_permittivity(*eps, 0.1, 1.0, dx, dy);
 //  radial_permittivity(*eps, 0.1, 1.0, dx, dy);
 
-//  for (uint32_t i = 0; i < nx; ++i) {
-//    std::cout << (*eps)(i, 99) << " ";
-//  }
-//  std::cout << std::endl;
 
   auto eps_grad = new devVector<2>(nx, ny);
   gradient2D(*eps_grad, *eps, dx, dy);

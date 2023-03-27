@@ -51,10 +51,6 @@ struct Beam2D : Manager {
   }
 };
 
-struct ray_record {
-  FPTYPE x, y;
-  uint32_t t;
-};
 
 __global__ void launch_rays(const Parameters params,
                             matrix_base<Beam2D<FPTYPE, cuda_managed>, 1, cuda_managed>& beams,
