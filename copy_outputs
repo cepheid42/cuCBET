@@ -1,0 +1,3 @@
+rm outputs/*.csv
+
+scp -r asexton2@hyrule.me.rochester.edu:/home/asexton2/Documents/cuCBET/outputs/* ./outputs/
