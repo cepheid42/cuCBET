@@ -1,7 +1,7 @@
 #ifndef CBET_INTERP2D_CUH
 #define CBET_INTERP2D_CUH
 
-#include "../Utilities/Utilities.cuh"
+#include "utilities.cuh"
 
 hd vec2<FPTYPE> interp2D(const devVector<2>& data,
                          const vec2<FPTYPE> point,

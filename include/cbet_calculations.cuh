@@ -1,8 +1,8 @@
 #ifndef CUCBET_CBET_CALCULATIONS_CUH
 #define CUCBET_CBET_CALCULATIONS_CUH
 
-#include "../Utilities/Utilities.cuh"
-#include "../Beams/Beam2D.cuh"
+#include "utilities.cuh"
+#include "beam2d.cuh"
 
 // struct intersection_record {
 //   vec2<FPTYPE> point;
@@ -21,7 +21,7 @@ __global__ void cbet_gain(devMatrix<2>& epsilon,
   auto nu_eic = ...;
   // eps = 1 - ne/nc --> ne/nc = 1 - eps
   // W1(s + ds) = W1(s) * exp((-kappa_ei + sum(gamma_1j * beta_j * Wj) / sqrt(eps_eff)) * ds)
-  auto kappa_ei = 2.0 * nu_eic * SQR(1 - eps) / (Constants::C0 * sqrt(1 - eps));
+  auto kappa_ei = 2.0 * nu_eic * SQR(1 - eps) / (constants::C0 * sqrt(1 - eps));
   auto beta_j = ;
   auto gamma_1j = ;
   // 1 / sqrt(eps_eff) = min(1/sqrt(eps), 2 * sqrt(L/ds))

@@ -1,7 +1,7 @@
 #ifndef CUCBET_RAY2D_CUH
 #define CUCBET_RAY2D_CUH
 
-#include "../Utilities/Vector2.cuh"
+#include "vector2.cuh"
 
 #define hd __host__ __device__
 

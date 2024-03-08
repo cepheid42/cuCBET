@@ -1,7 +1,7 @@
 #ifndef CUCBET_GRADIENTS_CUH
 #define CUCBET_GRADIENTS_CUH
 
-#include "../Utilities/Utilities.cuh"
+#include "utilities.cuh"
 
 void linear_permittivity_x(devMatrix<2>& eps, FPTYPE eden_min, FPTYPE eden_max) {
   // Fills epsilon = 1 - ne(x)/nc

@@ -1,8 +1,10 @@
 #ifndef CBET_PARAMETERS_CUH
 #define CBET_PARAMETERS_CUH
 
-#include "../Utilities/Utilities.cuh"
-#include "../Utilities/Vector2.cuh"
+#include <cstdint>
+
+#include "utilities.cuh"
+#include "vector2.cuh"
 
 struct BeamParams {
   vec2<FPTYPE> b_norm;

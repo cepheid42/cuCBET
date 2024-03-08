@@ -1,10 +1,10 @@
 #ifndef CUCBET_BEAM2D_CUH
 #define CUCBET_BEAM2D_CUH
 
-#include "../Utilities/Utilities.cuh"
-#include "../Parameters/Parameters.cuh"
-#include "../Interpolation/Interp2D.cuh"
-#include "Ray2D.cuh"
+#include "utilities.cuh"
+#include "parameters.cuh"
+#include "interp2d.cuh"
+#include "ray2d.cuh"
 
 #define hd __host__ __device__
 
